@@ -640,7 +640,7 @@ void CRailTickesDlg::Parser(std::wstring& strResponse, std::wstring& strJSONResu
 		//third class
 		PartParserWagon(strResponse, L" c_1020\">", strTrainThirdClassPrice, strTrainThirdClassSeat);
 
-		//seats
+		//left seats
 		PartParserWagon(strResponse, L" c_1001 last\">", strTrainSeatsPrice, strTrainSeatsSeat);
 
 		//sum
@@ -669,7 +669,7 @@ void CRailTickesDlg::Parser(std::wstring& strResponse, std::wstring& strJSONResu
 		ASSERT(strSumTrains);
 		memset((void*)strSumTrains, 0, nSumLenTrains * sizeof(wchar_t));
 		_stprintf_s(strSumTrains, nSumLenTrains, 
-			L"\"train\": {%s\"number\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", \"dep.\": \"%s\", \"duration\": \"%s\", \"arrive\": \"%s\", %s\"lux\": {\"price(ÃÐÍ)\": \"%s\", \"seats\": \"%s\"}, \"compartment_firm\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment\": {\"price\": \"%s\", \"seats\": \"%s\"}, %s\"third_class_firm\": {\"price\": \"%s\", \"seats\": \"%s\"},  \"third_class\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"seats\": {\"price\": \"%s\", \"seats\": \"%s\"} },%s", 
+			L"\"train\": {%s\"number\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", \"dep.\": \"%s\", \"duration\": \"%s\", \"arrive\": \"%s\", %s\"lux\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment_firm\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment\": {\"price\": \"%s\", \"seats\": \"%s\"}, %s\"third_class_firm\": {\"price\": \"%s\", \"seats\": \"%s\"},  \"third_class\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"left_seats\": {\"price\": \"%s\", \"seats\": \"%s\"} },%s", 
 			CR, strTrainNumber.c_str(), strTrainDeparture.c_str(), strTrainDestination.c_str(), strTrainDep.c_str(), strTrainDuration.c_str(), strTrainArrive.c_str(),
 			CR, strTrainLuxPrice.c_str(), strTrainLuxSeat.c_str(),
 			strTrainCompartmentFirmPrice.c_str(), strTrainCompartmentFirmSeat.c_str(),
