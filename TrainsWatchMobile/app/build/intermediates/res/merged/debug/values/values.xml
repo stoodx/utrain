@@ -224,7 +224,7 @@
     <string name="abc_toolbar_collapse_description">Collapse</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/strings.xml -->
     <eat-comment/>
-    <string name="app_name">TrainsWatchMobile</string>
+    <string name="app_name">Напрямок поїздів</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
     <eat-comment/>
     <string name="status_bar_notification_info_overflow">999+</string>
