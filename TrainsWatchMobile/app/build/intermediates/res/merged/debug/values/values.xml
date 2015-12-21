@@ -35,6 +35,39 @@
         <item>Ю</item>
         <item>Я</item>
     </string-array>
+    <string-array name="spinnerToA">
+        <item>А</item>
+        <item>Б</item>
+        <item>В</item>
+        <item>Г</item>
+        <item>Д</item>
+        <item>Е</item>
+        <item>Є</item>
+        <item>Ж</item>
+        <item>З</item>
+        <item>И</item>
+        <item>І</item>
+        <item>Ї</item>
+        <item>Й</item>
+        <item>К</item>
+        <item>Л</item>
+        <item>М</item>
+        <item>Н</item>
+        <item>О</item>
+        <item>П</item>
+        <item>Р</item>
+        <item>С</item>
+        <item>Т</item>
+        <item>У</item>
+        <item>Ф</item>
+        <item>Х</item>
+        <item>Ц</item>
+        <item>Ч</item>
+        <item>Ш</item>
+        <item>Щ</item>
+        <item>Ю</item>
+        <item>Я</item>
+    </string-array>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
     <eat-comment/>
     <attr format="reference" name="drawerArrowStyle"/>
@@ -260,16 +293,24 @@
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/strings.xml -->
     <eat-comment/>
     <string name="app_name">Напрямок поїздів</string>
+    <string name="buttonDate">Коли</string>
+    <string name="buttonRequest">Знайти</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
     <eat-comment/>
     <string name="status_bar_notification_info_overflow">999+</string>
+    <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="textViewFrom">Звідки:</string>
+    <string name="textViewTo">Куди:</string>
+    <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
+    <eat-comment/>
     <style name="AlertDialog.AppCompat" parent="Base.AlertDialog.AppCompat"/>
     <style name="AlertDialog.AppCompat.Light" parent="Base.AlertDialog.AppCompat.Light"/>
     <style name="Animation.AppCompat.Dialog" parent="Base.Animation.AppCompat.Dialog"/>
     <style name="Animation.AppCompat.DropDownUp" parent="Base.Animation.AppCompat.DropDownUp"/>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/styles.xml -->
     <eat-comment/>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

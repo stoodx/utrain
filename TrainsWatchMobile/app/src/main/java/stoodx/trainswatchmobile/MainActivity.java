@@ -11,10 +11,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Spinner spinner = (Spinner)findViewById(R.id.spinnerFromA);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+
+        //From
+        Spinner spinnerFromA = (Spinner)findViewById(R.id.spinnerFromA);
+        ArrayAdapter<CharSequence> adapterFromA = ArrayAdapter.createFromResource(this,
                 R.array.spinnerFromA, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
-        spinner.setAdapter(adapter);
+        adapterFromA.setDropDownViewResource(android.R.layout.simple_spinner_item);
+        spinnerFromA.setAdapter(adapterFromA);
+
+        //To
+        Spinner spinnerToA = (Spinner) findViewById(R.id.spinnerToA);
+        ArrayAdapter<CharSequence> adapterToA = ArrayAdapter.createFromResource(this,
+                R.array.spinnerToA, android.R.layout.simple_spinner_item);
+        adapterToA.setDropDownViewResource(android.R.layout.simple_spinner_item);
+        spinnerToA.setAdapter(adapterToA);
     }
 }

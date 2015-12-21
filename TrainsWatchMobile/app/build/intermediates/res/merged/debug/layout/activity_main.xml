@@ -9,17 +9,76 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Звідки:"
+        android:text="@string/textViewFrom"
         android:id="@+id/textViewFrom"
-        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
     <Spinner
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/spinnerFromA"
-        android:layout_below="@+id/textViewFrom" />
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/textViewFrom"
+        android:layout_toEndOf="@+id/textViewFrom"
+        android:layout_marginLeft="43dp"
+        android:layout_marginStart="43dp" />
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinnerFrom"
+        android:layout_below="@+id/spinnerFromA"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonDate"
+        android:textAllCaps="false"
+        android:text="@string/buttonDate"
+        android:layout_gravity="center"
+        android:layout_alignLeft="@+id/buttonRequest"
+        android:layout_alignStart="@+id/buttonRequest"
+        android:layout_alignParentBottom="false"
+        android:layout_alignWithParentIfMissing="false"
+        android:layout_below="@+id/spinnerFrom" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/textViewTo"
+        android:id="@+id/textViewTo"
+        android:layout_below="@+id/buttonDate"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="43dp" />
+
+    <Spinner
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinnerToA"
+        android:layout_alignTop="@+id/textViewTo"
+        android:layout_toRightOf="@+id/textViewFrom"
+        android:layout_toEndOf="@+id/textViewFrom" />
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinnerTo"
+        android:layout_below="@+id/spinnerToA"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/buttonRequest"
+        android:id="@+id/buttonRequest"
+        android:textAllCaps="false"
+        android:layout_below="@+id/spinnerTo"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
 <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/layout/activity_main.xml -->
