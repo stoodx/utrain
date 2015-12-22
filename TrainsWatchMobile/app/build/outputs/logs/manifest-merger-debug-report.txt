@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:2:1-20:12
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:2:1-21:12
 	package
 		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:3:5-39
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
@@ -14,7 +14,7 @@ ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.x
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
 application
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:5:5-18:19
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:5:5-19:19
 MERGED from [com.android.support:appcompat-v7:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.1.1\AndroidManifest.xml:22:5-20
 MERGED from [com.android.support:support-v4:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.1.1\AndroidManifest.xml:22:5-20
 	android:label
@@ -41,6 +41,10 @@ category#android.intent.category.LAUNCHER
 ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:17-77
 	android:name
 		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:27-74
+uses-permission#android.permission.INTERNET
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:18:9-71
+	android:name
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:18:26-68
 uses-sdk
 INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 MERGED from [com.android.support:appcompat-v7:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.1.1\AndroidManifest.xml:20:5-43
