@@ -294,11 +294,14 @@
     <string name="app_name">Напрямок поїздів</string>
     <string name="buttonDate">Коли</string>
     <string name="buttonRequest">Знайти</string>
+    <string name="buttonReturnToMainWindow">До Главного Вікна</string>
+    <string name="calendar_name">Виберіть дату відправки</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
     <eat-comment/>
     <string name="status_bar_notification_info_overflow">999+</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/strings.xml -->
     <eat-comment/>
+    <string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string>
     <string name="textViewFrom">Звідки:</string>
     <string name="textViewTo">Куди:</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->

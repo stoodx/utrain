@@ -69,4 +69,7 @@
         <item>Ю</item>
         <item>Я</item>
     </string-array>
+    <string name="calendar_name">Виберіть дату відправки</string>
+    <string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string>
+    <string name="buttonReturnToMainWindow">До Главного Вікна</string>
 </resources>

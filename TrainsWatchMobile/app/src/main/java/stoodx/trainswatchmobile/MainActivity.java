@@ -1,22 +1,20 @@
 package stoodx.trainswatchmobile;
 
 import android.app.AlertDialog;
-import android.app.VoiceInteractor;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private int[] m_nIDSpinner;
 
+    private String m_strCalendar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,8 +48,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_nIDSpinner[1] = 0;
         m_nIDSpinner[2] = 0;
 
-                m_arrayStationsFrom = new ArrayList<Station>();
+        m_arrayStationsFrom = new ArrayList<Station>();
         m_arrayStationsTo = new ArrayList<Station>();
+
+        m_strCalendar = "";
 
         //From
         m_spinnerFromA = (Spinner) findViewById(R.id.spinnerFromA);
@@ -269,4 +271,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         return strUTF6.substring(2);
     }
+
+    static final private int CHOOSE_CALENDAR = 0;
+
+    public void onClickWhen(View view) {
+        Intent intent = new Intent(MainActivity.this, CalendarActivity.class);
+        startActivityForResult(intent, CHOOSE_CALENDAR);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == CHOOSE_CALENDAR){
+            if (resultCode == RESULT_OK){
+                m_strCalendar = data.getStringExtra(CalendarActivity.CALENDAR);
+            }
+        }
+    }
+
+
 }

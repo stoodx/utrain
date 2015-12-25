@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:2:1-20:12
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:2:1-25:12
 	package
 		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:3:5-39
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
@@ -13,39 +13,43 @@ ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.x
 	android:versionCode
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
+uses-permission#android.permission.INTERNET
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:5:5-67
+	android:name
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:5:22-64
 application
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:5:5-18:20
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:7:5-23:19
 MERGED from [com.android.support:appcompat-v7:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.1.1\AndroidManifest.xml:22:5-20
 MERGED from [com.android.support:support-v4:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.1.1\AndroidManifest.xml:22:5-20
 MERGED from [TrainsWatchMobile:volley:unspecified] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\TrainsWatchMobile\volley\unspecified\AndroidManifest.xml:9:5-20
 	android:label
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:8:9-41
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:10:9-41
 	android:supportsRtl
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:9:9-35
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:11:9-35
 	android:allowBackup
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:6:9-35
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:8:9-35
 	android:icon
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:7:9-43
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:9:9-43
 	android:theme
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:10:9-40
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:12:9-40
 activity#stoodx.trainswatchmobile.MainActivity
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:11:9-17:20
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:13:9-19:20
 	android:name
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:11:19-47
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:13:19-47
 intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:12:13-16:29
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:14:13-18:29
 action#android.intent.action.MAIN
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:13:17-69
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:17-69
 	android:name
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:13:25-66
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:25-66
 category#android.intent.category.LAUNCHER
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:17-77
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:17:17-77
 	android:name
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:15:27-74
-uses-permission#android.permission.INTERNET
-ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:19:5-83
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:17:27-74
+activity#stoodx.trainswatchmobile.CalendarActivity
+ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:20:9-22:20
 	android:name
-		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:19:22-64
+		ADDED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml:20:19-51
 uses-sdk
 INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 MERGED from [com.android.support:appcompat-v7:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.1.1\AndroidManifest.xml:20:5-43

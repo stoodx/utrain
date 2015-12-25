@@ -23,6 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="stoodx.trainswatchmobile.CalendarActivity" >
+            android:label="@string/calendar_name"
+        </activity>
     </application>
 
 </manifest>

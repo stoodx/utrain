@@ -41,7 +41,8 @@
         android:layout_alignStart="@+id/buttonRequest"
         android:layout_alignParentBottom="false"
         android:layout_alignWithParentIfMissing="false"
-        android:layout_below="@+id/spinnerFrom" />
+        android:layout_below="@+id/spinnerFrom"
+        android:onClick="onClickWhen" />
 
     <TextView
         android:layout_width="wrap_content"
