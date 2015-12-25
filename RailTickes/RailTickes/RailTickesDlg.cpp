@@ -565,7 +565,7 @@ void CRailTickesDlg::Parser(std::wstring& strResponse, std::wstring& strJSONResu
 		wstring strTrainDep;
 		wstring strTrainDuration;
 		wstring strTrainArrive;
-		wstring strTrainLux;
+		//wstring strTrainLux;
 		wstring strTrainLuxPrice;
 		wstring strTrainLuxSeat;
 		wstring strTrainCompartmentFirmPrice;
