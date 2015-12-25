@@ -36,14 +36,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Spinner m_spinnerFrom;
     private Spinner m_spinnerTo;
 
-    private int m_nIDSpinner;
+    private int[] m_nIDSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_arrayStationsFrom = new ArrayList<Station>();
+        m_nIDSpinner = new int[3];
+        m_nIDSpinner[0] = 0;
+        m_nIDSpinner[1] = 0;
+        m_nIDSpinner[2] = 0;
+
+                m_arrayStationsFrom = new ArrayList<Station>();
         m_arrayStationsTo = new ArrayList<Station>();
 
         //From
@@ -127,12 +132,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
         // Request a string response from the provided URL.
-        m_nIDSpinner = id;
+        int i;
+        synchronized (m_nIDSpinner) {
+            for (i = 0; i < 3; i++) {
+                if (m_nIDSpinner[i] == 0) {
+                    m_nIDSpinner[i] = id;
+                    break;
+                }
+            }
+        }
+        if (id == 3){
+            messageBox("Увага", "Перевищено поріг запитів до сайту");
+            return;
+        }
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, strURL,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String strResponse) {
-                        handleResponse(strResponse, m_nIDSpinner);
+                        handleResponse(strResponse);
                      }
                 }, new Response.ErrorListener() {
             @Override
@@ -145,16 +163,30 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    private void handleResponse(String strResponse, int id){
-            switch (id) {
-            case R.id.spinnerFromA:
-                fillStations(strResponse, m_spinnerFrom, m_arrayStationsFrom);
-                break;
-            case R.id.spinnerToA:
-                fillStations(strResponse, m_spinnerTo, m_arrayStationsTo);
-                break;
-            default:
-                break;
+    private void handleResponse(String strResponse){
+        int id = 0;
+        int i;
+        synchronized (m_nIDSpinner) {
+            for (i = 0; i < 3; i++) {
+                if (m_nIDSpinner[i] != 0) {
+                    id = m_nIDSpinner[i];
+                    m_nIDSpinner[i] = 0;
+                    break;
+                }
+            }
+        }
+        if (i == 3){
+            return;
+        }
+        switch (id) {
+        case R.id.spinnerFromA:
+            fillStations(strResponse, m_spinnerFrom, m_arrayStationsFrom);
+            break;
+        case R.id.spinnerToA:
+            fillStations(strResponse, m_spinnerTo, m_arrayStationsTo);
+            break;
+        default:
+            break;
         }
     }
 
