@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         int nIndex = strResponse.indexOf("<MSG><var_0>");
         if (nIndex == -1){
-            messageBox("Увага", "Зіпсований формат з сайту");
+            messageBox("Увага", "Зіпсований формат з сайту: " + strResponse);
             return false;
         }
         nIndex += "<MSG><var_0>".length();

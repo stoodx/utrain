@@ -54,7 +54,7 @@ uses-sdk
 INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 MERGED from [com.android.support:appcompat-v7:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.1.1\AndroidManifest.xml:20:5-43
 MERGED from [com.android.support:support-v4:23.1.1] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.1.1\AndroidManifest.xml:20:5-43
-MERGED from [TrainsWatchMobile:volley:unspecified] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\TrainsWatchMobile\volley\unspecified\AndroidManifest.xml:7:5-43
+MERGED from [TrainsWatchMobile:volley:unspecified] D:\Work\utrain\trunk\TrainsWatchMobile\app\build\intermediates\exploded-aar\TrainsWatchMobile\volley\unspecified\AndroidManifest.xml:7:5-44
 	android:targetSdkVersion
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\AndroidManifest.xml
