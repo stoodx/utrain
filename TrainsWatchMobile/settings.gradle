@@ -1,1 +1,1 @@
-include ':app', ':volley'
+include ':app', ':volley', ':android-async-http-1.4.9'

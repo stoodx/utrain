@@ -9,14 +9,28 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+
+import com.android.volley.Cache;
+import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import com.loopj.android.http.*;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import cz.msebera.android.httpclient.Header;
 
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -136,8 +150,40 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
+    private void sendHTTPRequest(String strURL, int id){
+        int i;
+        synchronized (m_nIDSpinner) {
+            for (i = 0; i < 3; i++) {
+                if (m_nIDSpinner[i] == 0) {
+                    m_nIDSpinner[i] = id;
+                    break;
+                }
+            }
+        }
+        if (id == 3){
+            messageBox("Увага", "Перевищено поріг запитів до сайту");
+            return;
+        }
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setMaxRetriesAndTimeout(10, 10000);
+        client.get(strURL, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                // called when response HTTP status is "200 OK"
+                String strResponse = response.toString();
+                handleResponse(strResponse);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
+                messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
+            }
+        });
+    }
+
+/*
     private void sendHTTPRequest(String strURL, int id) {
-        // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
         // Request a string response from the provided URL.
         int i;
@@ -153,9 +199,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             messageBox("Увага", "Перевищено поріг запитів до сайту");
             return;
         }
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, strURL,
-                new Response.Listener<String>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET,  strURL,
+               new Response.Listener<String>() {
                     @Override
                     public void onResponse(String strResponse) {
                         handleResponse(strResponse);
@@ -168,8 +213,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-
-    }
+    }*/
 
     private void handleResponse(String strResponse){
         int id = 0;
