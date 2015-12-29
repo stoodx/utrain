@@ -8,30 +8,33 @@
     tools:context="stoodx.trainswatchmobile.CalendarActivity">
 
     <CalendarView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/calendarView"
-        android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/textViewCalendar" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/textViewCalendar"
         android:id="@+id/textViewCalendar"
-        android:layout_marginTop="43dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/calendarView"
-        android:layout_alignStart="@+id/calendarView" />
+        android:layout_marginBottom="151dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/buttonReturnToMainWindow"
         android:id="@+id/buttonReturnToMainWindow"
-        android:layout_below="@+id/calendarView"
         android:textAllCaps="false"
+        android:onClick="onClickReturnToMainWindow"
+        android:layout_alignTop="@+id/textViewCalendar"
         android:layout_centerHorizontal="true"
-        android:onClick="onClickReturnToMainWindow" />
+        android:layout_marginTop="83dp" />
 </RelativeLayout>

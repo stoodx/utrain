@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         sendHTTPRequest(strURL, spinnerA.getId());
         return true;
     }
-
+/*
     private void sendHTTPRequest(String strURL, int id){
         int i;
         synchronized (m_nIDSpinner) {
@@ -180,9 +180,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
             }
         });
-    }
+    }*/
 
-/*
+
     private void sendHTTPRequest(String strURL, int id) {
         RequestQueue queue = Volley.newRequestQueue(this);
         // Request a string response from the provided URL.
@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-    }*/
+    }
 
     private void handleResponse(String strResponse){
         int id = 0;
