@@ -38,10 +38,13 @@ protected:
 	CComboBox m_comboA_To;
 private:
 	bool FillStations(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations);
+	bool FillStationsDPRC(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations);
+	bool FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations);
 	void CleanStations(std::vector<Station*>* pvecpStations);
 	void Parser(std::wstring& strResponse, std::wstring& strJSONResult);
 	bool PartParser(std::wstring& strResponse, const wchar_t* str, std::wstring& strTarget);
 	bool PartParserWagon(std::wstring& strResponse, const wchar_t* str, std::wstring& strPrice, std::wstring& strSeats);
+	std::wstring PrintUTF16Converter(std::wstring& str);
 protected:
 	CComboBox m_comboFrom;
 	CComboBox m_comboTo;
@@ -56,4 +59,6 @@ public:
 protected:
 	CMonthCalCtrl m_calendar;
 	CButton m_btnSearch;
+	
+	BOOL m_bBooking;
 };

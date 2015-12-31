@@ -32,6 +32,7 @@ struct Station
 
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
+	, m_bBooking(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -45,6 +46,7 @@ void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_TO, m_comboTo);
 	DDX_Control(pDX, IDC_MONTHCALENDAR1, m_calendar);
 	DDX_Control(pDX, IDOK, m_btnSearch);
+	DDX_Radio(pDX, IDC_RADIO_BOOKING, m_bBooking);
 }
 
 BEGIN_MESSAGE_MAP(CRailTickesDlg, CDialogEx)
@@ -80,6 +82,8 @@ BOOL CRailTickesDlg::OnInitDialog()
 
 	m_comboA_From.SetCurSel(0);
 	m_comboA_To.SetCurSel(1);
+	m_bBooking = TRUE;
+	UpdateData(FALSE);
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
 		!FillStations(m_comboA_To, m_comboTo, m_vecpStationsTo))
@@ -124,10 +128,182 @@ HCURSOR CRailTickesDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-
-
 bool CRailTickesDlg::FillStations(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
+{
+	UpdateData(TRUE);
+	if (m_bBooking)
+		return FillStationsBooking(comboA, comboStation, vecpStations);
+	else
+		return FillStationsDPRC(comboA, comboStation, vecpStations);
+}
+
+std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
+{
+	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', 'f'};
+	unsigned char nNumber[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
+	wstring strResponse = L"";
+	if (!str.empty())
+	{
+		wstring strConvert = str;
+		int nIndex = 0;
+		while (true)
+		{
+			nIndex = strConvert.find(L"\\u");
+			if (nIndex == wstring::npos)
+				break;
+			strConvert.erase(nIndex, 2);
+		}
+		if (!strConvert.empty())
+		{
+			int nLen = strConvert.size(); 
+			unsigned char* strBuf = new unsigned char[sizeof(wchar_t) * nLen + 1];
+			ASSERT(strBuf);
+			memset(strBuf, 0, sizeof(wchar_t) * nLen + 1);
+			int k = 0;
+			for (int i = 0; i < nLen; i += 4)
+			{
+				wchar_t ch[4];
+				unsigned char n[4];
+				ch[0]  = strConvert.at(i);
+				ch[1]  = strConvert.at(i + 1);
+				ch[2]  = strConvert.at(i + 2);
+				ch[3]  = strConvert.at(i + 3);
+				int j;
+				for (j = 0; j < 4; j++)
+				{
+					int m = 0;
+					while ( m < 16)
+					{
+						if (ch[j] == chNumber[m])
+							break;
+						m++;
+					}
+					n[j] = nNumber[m];
+				}
+				strBuf[k++] = n[3];
+				strBuf[k++] = n[2];
+				strBuf[k++] = n[1];
+				strBuf[k++] = n[0];
+			}
+			strResponse = (wchar_t*)strBuf;
+			delete [] strBuf;
+		}
+	}
+	return strResponse;
+}
+
+bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
+{
+	CString strError;
+
+	comboStation.ResetContent();
+	CleanStations(&vecpStations);
+
+	wstring strURL(L"http://booking.uz.gov.ua/purchase/station/");
+	CString strA;
+	comboA.GetLBText(comboA.GetCurSel(), strA);
+	strURL.append(strA);
+	WinHttpClient request(strURL);
+
+	// Set request headers.
+	wstring strHeaders = L"Content-Length: ";
+	strHeaders += L"0";
+	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	request.SetAdditionalRequestHeaders(strHeaders);
+
+	// Send http post request.
+	if ( !request.SendHttpRequest(L"Get"))
+	{
+		strError.Format(L"Error sending: %i", request.GetLastError());
+		AfxMessageBox(strError);
+		return false;
+	}
+
+	wstring str_httpResponseCode = request.GetResponseStatusCode();
+	wstring str_httpResponseContent = request.GetResponseContent();
+
+	if (str_httpResponseCode.compare(L"200"))
+	{
+		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+		AfxMessageBox(strError);
+		return false;
+	}
+	if (str_httpResponseContent.empty())
+	{
+		AfxMessageBox(L"No response");
+		return false;
+	}
+
+	int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
+	if (nIndex == wstring::npos)
+	{
+		AfxMessageBox(L"Bad format");
+		return false;
+	}
+	nIndex +=  _tcslen(L"{\"value\":[{");
+	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	while(true)
+	{
+		nIndex = str_httpResponseContent.find(L"\"title\":\"");
+		if (nIndex == wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"title\":\"");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		//station
+		wstring strName(L"");
+		int i, nLen;
+		nLen = str_httpResponseContent.size();
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'\"')
+				break;
+			strName += c;
+		}
+
+		//id
+		nIndex = str_httpResponseContent.find(L"\"station_id\":");
+		if (nIndex == wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"station_id\":");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		nLen = str_httpResponseContent.size();
+		wstring strID(L"");
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'}')
+				break;
+			strID += c;
+		}
+		Station* pStation = NULL; 
+		pStation =  new Station;
+		ASSERT(pStation);
+		pStation->m_strID = strID;
+		pStation->m_strName = PrintUTF16Converter(strName);
+		vecpStations.push_back(pStation);
+	}
+	if (vecpStations.empty())
+	{
+		AfxMessageBox(L"No enries.");
+		return false;
+	}
+
+	int nSize = vecpStations.size();
+	for (int j = 0; j < nSize; j++)
+	{
+		Station* pStation = vecpStations[j];
+		comboStation.AddString(pStation->m_strName.c_str());
+	}
+	comboStation.SetCurSel(0);
+	return true;
+}
+
+bool CRailTickesDlg::FillStationsDPRC(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
 	CString strError;
 
