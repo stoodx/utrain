@@ -32,7 +32,7 @@ struct Station
 
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
-	, m_bBooking(FALSE)
+	, m_nBooking(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -46,7 +46,7 @@ void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_TO, m_comboTo);
 	DDX_Control(pDX, IDC_MONTHCALENDAR1, m_calendar);
 	DDX_Control(pDX, IDOK, m_btnSearch);
-	DDX_Radio(pDX, IDC_RADIO_BOOKING, m_bBooking);
+	DDX_Radio(pDX, IDC_RADIO_BOOKING, m_nBooking);
 }
 
 BEGIN_MESSAGE_MAP(CRailTickesDlg, CDialogEx)
@@ -82,7 +82,6 @@ BOOL CRailTickesDlg::OnInitDialog()
 
 	m_comboA_From.SetCurSel(0);
 	m_comboA_To.SetCurSel(1);
-	m_bBooking = TRUE;
 	UpdateData(FALSE);
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
@@ -131,7 +130,7 @@ HCURSOR CRailTickesDlg::OnQueryDragIcon()
 bool CRailTickesDlg::FillStations(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
 	UpdateData(TRUE);
-	if (m_bBooking)
+	if (!m_nBooking)
 		return FillStationsBooking(comboA, comboStation, vecpStations);
 	else
 		return FillStationsDPRC(comboA, comboStation, vecpStations);
@@ -139,56 +138,97 @@ bool CRailTickesDlg::FillStations(CComboBox& comboA, CComboBox& comboStation, st
 
 std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 {
+	wstring strResponse = L"";
+	if (str.empty())
+		return strResponse;
+
+	typedef enum {
+		_empty = 0,
+		_start,
+		_0,
+		_1,
+		_2, 
+		_3
+	} _status;
+	_status status = _empty;
+	wchar_t ch;
+	int nLen = str.size();
+	wstring strConvert;
 	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', 'f'};
 	unsigned char nNumber[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
-	wstring strResponse = L"";
-	if (!str.empty())
+
+	for(int i = 0; i < nLen; i++)
 	{
-		wstring strConvert = str;
-		int nIndex = 0;
-		while (true)
+		ch = str.at(i);
+		switch (status)
 		{
-			nIndex = strConvert.find(L"\\u");
-			if (nIndex == wstring::npos)
-				break;
-			strConvert.erase(nIndex, 2);
-		}
-		if (!strConvert.empty())
-		{
-			int nLen = strConvert.size(); 
-			unsigned char* strBuf = new unsigned char[sizeof(wchar_t) * nLen + 1];
-			ASSERT(strBuf);
-			memset(strBuf, 0, sizeof(wchar_t) * nLen + 1);
-			int k = 0;
-			for (int i = 0; i < nLen; i += 4)
+		case _empty:
+			if (ch == L'\\')
 			{
-				wchar_t ch[4];
+				status = _start;
+			}
+			else
+				strResponse += ch;
+			break;
+		case _start:
+			if (ch != L'u')
+			{
+				status = _empty;
+				strResponse += L'\\';
+				strResponse += ch;
+			}
+			else
+				status = _0;
+			break;
+		case _0:
+			strConvert = ch;
+			status = _1;
+			break;
+		case _1:
+			strConvert += ch;
+			status = _2;
+			break;
+		case _2:
+			strConvert += ch;
+			status = _3;
+			break;
+		case _3:
+			{
+				strConvert += ch;
+				status = _empty;
+				unsigned char strBuf[5] = {0};
+				wchar_t chs[4];
 				unsigned char n[4];
-				ch[0]  = strConvert.at(i);
-				ch[1]  = strConvert.at(i + 1);
-				ch[2]  = strConvert.at(i + 2);
-				ch[3]  = strConvert.at(i + 3);
+				chs[0]  = strConvert.at(0);
+				chs[1]  = strConvert.at(1);
+				chs[2]  = strConvert.at(2);
+				chs[3]  = strConvert.at(3);
 				int j;
 				for (j = 0; j < 4; j++)
 				{
 					int m = 0;
 					while ( m < 16)
 					{
-						if (ch[j] == chNumber[m])
+						if (chs[j] == chNumber[m])
 							break;
 						m++;
 					}
 					n[j] = nNumber[m];
 				}
-				strBuf[k++] = n[3];
-				strBuf[k++] = n[2];
-				strBuf[k++] = n[1];
-				strBuf[k++] = n[0];
+				n[2] = n[2] << 4; 
+				strBuf[0] |= n[2];
+				strBuf[0] |= n[3];
+				n[0] = n[0] << 4;
+				strBuf[1] |= n[0];
+				strBuf[1] |= n[1];
+				strResponse += (wchar_t*)strBuf;
 			}
-			strResponse = (wchar_t*)strBuf;
-			delete [] strBuf;
+			break;
+		default:
+			break;
 		}
 	}
+
 	return strResponse;
 }
 
@@ -449,9 +489,68 @@ void CRailTickesDlg::OnCbnSelchangeComboATo()
 	FillStations(m_comboA_To, m_comboTo, m_vecpStationsTo);
 }
 
+std::string CRailTickesDlg::UTF16toUTF8(const std::wstring strUTF16)
+{
+   string strUTF8;
+   int len = WideCharToMultiByte(CP_UTF8, 0, strUTF16.c_str(), -1, NULL, 0, 0, 0);
+   if (len>1)
+   { 
+      char *ptr = new char[len + 1];
+	  memset(ptr, 0, len+ 1);
+      if (ptr) 
+		  WideCharToMultiByte(CP_UTF8, 0, strUTF16.c_str(), -1, ptr, len, 0, 0);
+	  strUTF8 = ptr;
+	  delete [] ptr;
+   }
+   return strUTF8;
+}
+
+
+CString  CRailTickesDlg::UrlEncode(CString str)
+{
+	CString escaped = _T("");
+	int len = str.GetLength();
+	for (int i = 0; i < len; i++)
+	{
+		TCHAR c = str.GetAt(i);
+		if ( (48 <= c && c <= 57) ||//0-9
+             (65 <= c && c <= 90) ||//abc...xyz
+             (97 <= c && c <= 122) || //ABC...XYZ
+             (c == _T('~') || c ==_T('!') || c==_T('*') || c ==_T('(') || c ==_T(')') || c ==_T('\''))
+        )
+        {
+            escaped += c ;
+        }
+        else
+        {
+            escaped  +=  _T('%');
+            escaped   +=  Char2hex(c); //converts char 255 to string "ff"
+        }
+	}
+
+	return escaped;
+}
+
+
+CString  CRailTickesDlg::Char2hex(TCHAR c)
+{
+    TCHAR dig1 = (c&0xF0)>>4;
+    TCHAR dig2 = (c&0x0F);
+    if ( 0<= dig1 && dig1<= 9) dig1+=48;    //0,48inascii
+    if (10<= dig1 && dig1<=15) dig1+=97-10; //a,97inascii
+    if ( 0<= dig2 && dig2<= 9) dig2+=48;
+    if (10<= dig2 && dig2<=15) dig2+=97-10;
+
+    CString r = _T("");
+    r += dig1;
+    r += dig2;
+    return r;
+}
 
 void CRailTickesDlg::OnBnClickedOk()
 {
+	UpdateData(TRUE);
+
 	if (m_vecpStationsFrom.empty() ||
 		m_vecpStationsTo.empty())
 		return;
@@ -462,31 +561,66 @@ void CRailTickesDlg::OnBnClickedOk()
 	int nCurrentPosForm = m_comboFrom.GetCurSel();
 	int nCurrentPosTo = m_comboTo.GetCurSel();
 	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
+	const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
 	const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
+	const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
+
 	SYSTEMTIME dateTime;
 	m_calendar.GetCurSel(&dateTime);
-	
 	wchar_t strURL[MAX_PATH] = {0};
-	//http://dprc.gov.ua/show.php?transport_type=2&src=22200001&dst=22218000&dt=2015-12-30&ret_dt=2001-01-01&ps=ec_privat
-	_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%d-%d&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
-		strIDFrom, strIDTo, dateTime.wYear,  dateTime.wMonth, dateTime.wDay);
-
+	string strPostUTF8;
+	if (m_nBooking)
+		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%d-%d&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
+			strIDFrom, strIDTo, dateTime.wYear,  dateTime.wMonth, dateTime.wDay);
+	else
+	{
+		char strPost[MAX_PATH * 2] = {0};
+		_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
+		sprintf_s(strPost, 2 * MAX_PATH, 
+			"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=0%d.0%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
+			strIDFrom, strIDTo, UTF16toUTF8(strStationFrom), UTF16toUTF8(strStationTo), dateTime.wDay, dateTime.wMonth, dateTime.wYear);
+		strPostUTF8 = UTF16toUTF8(strPost);
+		
+	}
 	WinHttpClient request(strURL);
 	// Set request headers.
 	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
+	if (m_nBooking)
+		strHeaders += L"0";
+	else
+	{
+		int nLen =  strPostUTF8.size();//_tcslen(strPost) * sizeof(wchar_t);
+		request.SetAdditionalDataToSend((BYTE *)strPostUTF8.c_str(), nLen);
+		wchar_t szSize[50] = L"";
+		swprintf_s(szSize, L"%d", nLen);
+		strHeaders += szSize;
+	}
 	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
 	request.SetAdditionalRequestHeaders(strHeaders);
 	CString strError;
 
 	// Send http post request.
-	if ( !request.SendHttpRequest(L"Get"))
+	if (m_nBooking)
 	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		AfxMessageBox(strError);
-		m_btnSearch.EnableWindow(TRUE);
-		m_btnSearch.SetWindowText(L"Поиск");
-		return ;
+		if ( !request.SendHttpRequest(L"Get"))
+		{
+			strError.Format(L"Error sending: %i", request.GetLastError());
+			AfxMessageBox(strError);
+			m_btnSearch.EnableWindow(TRUE);
+			m_btnSearch.SetWindowText(L"Поиск");
+			return ;
+		}
+	}
+	else
+	{
+		if ( !request.SendHttpRequest(L"Post"))
+		{
+			strError.Format(L"Error sending: %i", request.GetLastError());
+			AfxMessageBox(strError);
+			m_btnSearch.EnableWindow(TRUE);
+			m_btnSearch.SetWindowText(L"Поиск");
+			return ;
+		}
 	}
 
 	wstring str_httpResponseCode = request.GetResponseStatusCode();
@@ -507,7 +641,11 @@ void CRailTickesDlg::OnBnClickedOk()
 		return;
 	}
 	wstring strJSON;
-	Parser(str_httpResponseContent, strJSON);
+	if (m_nBooking)
+		ParserDPRC(str_httpResponseContent, strJSON);
+	else
+		ParserBooking(str_httpResponseContent, strJSON);
+
 	AfxMessageBox(strJSON.c_str(), MB_OK | MB_ICONINFORMATION); 
 	m_btnSearch.EnableWindow(TRUE);
 	m_btnSearch.SetWindowText(L"Поиск");
@@ -614,8 +752,11 @@ end:
 	return bResult;
 }
 
+void CRailTickesDlg::ParserBooking(std::wstring& strResponse, std::wstring& strJSONResult)
+{
+}
 
-void CRailTickesDlg::Parser(std::wstring& strResponse, std::wstring& strJSONResult)
+void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSONResult)
 {
 	strJSONResult = L"";
 	if (strResponse.empty())
