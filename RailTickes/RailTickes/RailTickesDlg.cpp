@@ -506,24 +506,27 @@ std::string CRailTickesDlg::UTF16toUTF8(const std::wstring strUTF16)
 }
 
 
-CString  CRailTickesDlg::UrlEncode(CString str)
+std::string  CRailTickesDlg::UrlEncode(const std::string str)
 {
-	CString escaped = _T("");
-	int len = str.GetLength();
+	string escaped("");
+	if (str.empty())
+		return escaped;
+
+	int len = str.size();
 	for (int i = 0; i < len; i++)
 	{
-		TCHAR c = str.GetAt(i);
+		char c = str.at(i);
 		if ( (48 <= c && c <= 57) ||//0-9
              (65 <= c && c <= 90) ||//abc...xyz
              (97 <= c && c <= 122) || //ABC...XYZ
-             (c == _T('~') || c ==_T('!') || c==_T('*') || c ==_T('(') || c ==_T(')') || c ==_T('\''))
+             (c == '~' || c == '!' || c=='*' || c == '(' || c == ')' || c == '\'')
         )
         {
             escaped += c ;
         }
         else
         {
-            escaped  +=  _T('%');
+            escaped  +=  '%';
             escaped   +=  Char2hex(c); //converts char 255 to string "ff"
         }
 	}
@@ -532,16 +535,20 @@ CString  CRailTickesDlg::UrlEncode(CString str)
 }
 
 
-CString  CRailTickesDlg::Char2hex(TCHAR c)
+std::string  CRailTickesDlg::Char2hex(char c)
 {
-    TCHAR dig1 = (c&0xF0)>>4;
-    TCHAR dig2 = (c&0x0F);
-    if ( 0<= dig1 && dig1<= 9) dig1+=48;    //0,48inascii
-    if (10<= dig1 && dig1<=15) dig1+=97-10; //a,97inascii
-    if ( 0<= dig2 && dig2<= 9) dig2+=48;
-    if (10<= dig2 && dig2<=15) dig2+=97-10;
+    char dig1 = (c&0xF0)>>4;
+    char dig2 = (c&0x0F);
+    if ( 0<= dig1 && dig1<= 9) 
+		dig1+=48;    //0,48 in ascii
+    if (10<= dig1 && dig1<=15) 
+		dig1+= 65-10; //97-10; //a,97 in ascii
+    if ( 0<= dig2 && dig2<= 9) 
+		dig2+=48;
+    if (10<= dig2 && dig2<=15) 
+		dig2+= 65-10;//97-10;
 
-    CString r = _T("");
+    string r("");
     r += dig1;
     r += dig2;
     return r;
@@ -558,6 +565,59 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.EnableWindow(FALSE);
 	m_btnSearch.SetWindowText(L"Ожидайте...");
 
+	wstring strJSON;
+	if (m_nBooking)
+		strJSON = RequestDPRC();
+	else
+		strJSON = RequestBookong();
+
+	AfxMessageBox(strJSON.c_str(), MB_OK | MB_ICONINFORMATION); 
+	m_btnSearch.EnableWindow(TRUE);
+	m_btnSearch.SetWindowText(L"Поиск");
+}
+
+bool CRailTickesDlg::GetHeader(const std::wstring& strURL, std::string& strResponse)
+{
+	strResponse = "";
+	WinHttpClient request(strURL);
+	// Set request headers.
+	wstring strHeaders = L"Content-Length: ";
+	strHeaders += L"0";
+	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	request.SetAdditionalRequestHeaders(strHeaders);
+	CStringA strError;
+
+	// Send http post request.
+	if (!request.SendHttpRequest(L"Get"))
+	{
+		strError.Format("Error sending: %i", request.GetLastError());
+		strResponse =  strError.GetBuffer();
+		return false;
+	}
+
+	wstring str_httpResponseCode = request.GetResponseStatusCode();
+	wstring str_httpResponseContent = request.GetResponseContent();
+
+	if (str_httpResponseCode.compare(L"200"))
+	{
+		strError.Format("Error response: %s", str_httpResponseCode.c_str());
+		strResponse =  strError.GetBuffer();
+		return false;
+	}
+	if (str_httpResponseContent.empty())
+	{
+		strResponse =  "No response";
+		return false;
+	}
+	strResponse = UTF16toUTF8(str_httpResponseCode );
+	return true;
+}
+
+std::wstring CRailTickesDlg::RequestBookong()
+{
+	string strHeader;
+	GetHeader(L"http://booking.uz.gov.ua/", strHeader);
+	
 	int nCurrentPosForm = m_comboFrom.GetCurSel();
 	int nCurrentPosTo = m_comboTo.GetCurSel();
 	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
@@ -568,59 +628,32 @@ void CRailTickesDlg::OnBnClickedOk()
 	SYSTEMTIME dateTime;
 	m_calendar.GetCurSel(&dateTime);
 	wchar_t strURL[MAX_PATH] = {0};
-	string strPostUTF8;
-	if (m_nBooking)
-		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%d-%d&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
-			strIDFrom, strIDTo, dateTime.wYear,  dateTime.wMonth, dateTime.wDay);
-	else
-	{
-		char strPost[MAX_PATH * 2] = {0};
-		_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
-		sprintf_s(strPost, 2 * MAX_PATH, 
-			"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=0%d.0%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
-			strIDFrom, strIDTo, UTF16toUTF8(strStationFrom), UTF16toUTF8(strStationTo), dateTime.wDay, dateTime.wMonth, dateTime.wYear);
-		strPostUTF8 = UTF16toUTF8(strPost);
+	char strPost[MAX_PATH * 2] = {0};
+	
+	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/purchase/search/");
+	sprintf_s(strPost, 2 * MAX_PATH, 
+		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=0%d.0%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
+		UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
+		UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
+		dateTime.wDay, dateTime.wMonth, dateTime.wYear);
 		
-	}
 	WinHttpClient request(strURL);
 	// Set request headers.
 	wstring strHeaders = L"Content-Length: ";
-	if (m_nBooking)
-		strHeaders += L"0";
-	else
-	{
-		int nLen =  strPostUTF8.size();//_tcslen(strPost) * sizeof(wchar_t);
-		request.SetAdditionalDataToSend((BYTE *)strPostUTF8.c_str(), nLen);
-		wchar_t szSize[50] = L"";
-		swprintf_s(szSize, L"%d", nLen);
-		strHeaders += szSize;
-	}
+	int nLen =  strlen(strPost);
+	request.SetAdditionalDataToSend((BYTE *)strPost, nLen);
+	wchar_t szSize[50] = L"";
+	swprintf_s(szSize, L"%d", nLen);
+	strHeaders += szSize;
 	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
 	request.SetAdditionalRequestHeaders(strHeaders);
 	CString strError;
 
 	// Send http post request.
-	if (m_nBooking)
+	if ( !request.SendHttpRequest(L"Post"))
 	{
-		if ( !request.SendHttpRequest(L"Get"))
-		{
-			strError.Format(L"Error sending: %i", request.GetLastError());
-			AfxMessageBox(strError);
-			m_btnSearch.EnableWindow(TRUE);
-			m_btnSearch.SetWindowText(L"Поиск");
-			return ;
-		}
-	}
-	else
-	{
-		if ( !request.SendHttpRequest(L"Post"))
-		{
-			strError.Format(L"Error sending: %i", request.GetLastError());
-			AfxMessageBox(strError);
-			m_btnSearch.EnableWindow(TRUE);
-			m_btnSearch.SetWindowText(L"Поиск");
-			return ;
-		}
+		strError.Format(L"Error sending: %i", request.GetLastError());
+		return strError.GetBuffer();
 	}
 
 	wstring str_httpResponseCode = request.GetResponseStatusCode();
@@ -629,28 +662,64 @@ void CRailTickesDlg::OnBnClickedOk()
 	if (str_httpResponseCode.compare(L"200"))
 	{
 		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		AfxMessageBox(strError);
-		m_btnSearch.EnableWindow(TRUE);
-		return;
+		return strError.GetBuffer();
 	}
 	if (str_httpResponseContent.empty())
 	{
-		AfxMessageBox(L"No response");
-		m_btnSearch.EnableWindow(TRUE);
-		m_btnSearch.SetWindowText(L"Поиск");
-		return;
+		return L"No response";
 	}
 	wstring strJSON;
-	if (m_nBooking)
-		ParserDPRC(str_httpResponseContent, strJSON);
-	else
-		ParserBooking(str_httpResponseContent, strJSON);
-
-	AfxMessageBox(strJSON.c_str(), MB_OK | MB_ICONINFORMATION); 
-	m_btnSearch.EnableWindow(TRUE);
-	m_btnSearch.SetWindowText(L"Поиск");
+	ParserBooking(str_httpResponseContent, strJSON);
+	return strJSON;
 }
 
+std::wstring CRailTickesDlg::RequestDPRC()
+{
+	int nCurrentPosForm = m_comboFrom.GetCurSel();
+	int nCurrentPosTo = m_comboTo.GetCurSel();
+	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
+	const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
+	const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
+	const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
+
+	SYSTEMTIME dateTime;
+	m_calendar.GetCurSel(&dateTime);
+	wchar_t strURL[MAX_PATH] = {0};
+	if (m_nBooking)
+		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%d-%d&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
+			strIDFrom, strIDTo, dateTime.wYear,  dateTime.wMonth, dateTime.wDay);
+
+	WinHttpClient request(strURL);
+	// Set request headers.
+	wstring strHeaders = L"Content-Length: ";
+	strHeaders += L"0";
+	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	request.SetAdditionalRequestHeaders(strHeaders);
+	CString strError;
+
+	// Send http post request.
+	if ( !request.SendHttpRequest(L"Get"))
+	{
+		strError.Format(L"Error sending: %i", request.GetLastError());
+		return strError.GetBuffer();
+	}
+
+	wstring str_httpResponseCode = request.GetResponseStatusCode();
+	wstring str_httpResponseContent = request.GetResponseContent();
+
+	if (str_httpResponseCode.compare(L"200"))
+	{
+		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+		return strError.GetBuffer();
+	}
+	if (str_httpResponseContent.empty())
+	{
+		return L"No response";
+	}
+	wstring strJSON;
+	ParserDPRC(str_httpResponseContent, strJSON);
+	return strJSON;
+}
 
 bool CRailTickesDlg::PartParser(std::wstring& strResponse, const wchar_t* str, std::wstring& strTarget)
 {

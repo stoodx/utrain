@@ -47,8 +47,12 @@ private:
 	bool PartParserWagon(std::wstring& strResponse, const wchar_t* str, std::wstring& strPrice, std::wstring& strSeats);
 	std::wstring PrintUTF16Converter(std::wstring& str);
 	std::string UTF16toUTF8(const std::wstring strUTF16);
-	CString UrlEncode(CString str);
-	CString Char2hex(TCHAR c);
+	std::string UrlEncode(const std::string str);
+	std::string Char2hex(char c);
+	std::wstring RequestBookong();
+	std::wstring RequestDPRC();
+	bool GetHeader(const std::wstring& strURL, std::string& strResponse);
+
 protected:
 	CComboBox m_comboFrom;
 	CComboBox m_comboTo;

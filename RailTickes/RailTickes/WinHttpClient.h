@@ -221,6 +221,10 @@ bool WinHttpClient::SendHttpRequest(const wstring &httpVerb, bool disableAutoRed
     {
         verb = L"POST";
     }
+    else if (_wcsicmp(verb.c_str(), L"HEAD") == 0)
+    {
+        verb = L"HEAD";
+    }
     else
     {
         m_dwLastError = ERROR_INVALID_PARAMETER;
