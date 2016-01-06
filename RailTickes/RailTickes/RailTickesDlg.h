@@ -7,6 +7,10 @@
 #include <vector>
 #include "afxdtctl.h"
 
+extern "C" {
+#include "duktape\duktape.h"
+}
+
 
 struct Station;
 
@@ -51,7 +55,9 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	bool GetToken(const std::wstring& strURL, std::string& strResponse);
+	bool SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse);
+	static duk_ret_t get_result_token(duk_context *ctx);
+	static CRailTickesDlg* m_pCRailTickesDlg;
 
 protected:
 	CComboBox m_comboFrom;

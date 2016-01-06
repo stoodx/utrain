@@ -13,7 +13,11 @@
 #define new DEBUG_NEW
 #endif
 
-#define CR L"\n"
+#define CR L"\n" 
+
+#define PUSH_C_FUNCTION(fcn, nargs) \
+	duk_push_c_function(ctx, fcn, nargs);\
+	duk_put_prop_string(ctx, -2, #fcn);
 
 // CRailTickesDlg dialog
 
@@ -28,6 +32,7 @@ struct Station
 	std::wstring m_strName;
 };
 
+CRailTickesDlg* CRailTickesDlg::m_pCRailTickesDlg = NULL;
 
 
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
@@ -36,6 +41,7 @@ CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	, m_strToken("")
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_pCRailTickesDlg = this;
 }
 
 void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
@@ -89,11 +95,8 @@ BOOL CRailTickesDlg::OnInitDialog()
 
 	if (!m_nBooking)
 	{
-		string strResponse;
-		if (GetToken(L"http://booking.uz.gov.ua/", strResponse))
-		{
-			m_strToken = strResponse;
-		}
+		wstring strResponse;
+		SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse);
 	}
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
@@ -485,7 +488,7 @@ void CRailTickesDlg::OnClose()
 {
 	CleanStations(&m_vecpStationsFrom);
 	CleanStations(&m_vecpStationsTo);
-
+	m_pCRailTickesDlg = NULL;
 	CDialogEx::OnClose();
 }
 
@@ -588,21 +591,21 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.SetWindowText(L"Поиск");
 }
 
-bool CRailTickesDlg::GetToken(const std::wstring& strURL, std::string& strResponse)
+bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
 {
-	strResponse = "";
+	strResponse = L"";
 	WinHttpClient request(strURL);
 	// Set request headers.
 	wstring strHeaders = L"Content-Length: ";
 	strHeaders += L"0";
 	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
 	request.SetAdditionalRequestHeaders(strHeaders);
-	CStringA strError;
+	CString strError;
 
 	// Send http post request.
 	if (!request.SendHttpRequest(L"Get"))
 	{
-		strError.Format("Error sending: %i", request.GetLastError());
+		strError.Format(L"Error sending: %i", request.GetLastError());
 		strResponse =  strError.GetBuffer();
 		return false;
 	}
@@ -612,13 +615,13 @@ bool CRailTickesDlg::GetToken(const std::wstring& strURL, std::string& strRespon
 
 	if (str_httpResponseCode.compare(L"200"))
 	{
-		strError.Format("Error response: %s", str_httpResponseCode.c_str());
+		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
 		strResponse =  strError.GetBuffer();
 		return false;
 	}
 	if (str_httpResponseContent.empty())
 	{
-		strResponse =  "No response";
+		strResponse =  L"No response";
 		return false;
 	}
 
@@ -626,7 +629,7 @@ bool CRailTickesDlg::GetToken(const std::wstring& strURL, std::string& strRespon
 	nIndex = str_httpResponseContent.find(L"gaq.push(['_trackPageview']);");
 	if (nIndex == wstring::npos)
 	{
-		strResponse = "Token: bad format";
+		strResponse = L"Token: bad format";
 		return false;
 	}
 	nIndex += _tcslen(L"gaq.push(['_trackPageview']);");
@@ -634,11 +637,46 @@ bool CRailTickesDlg::GetToken(const std::wstring& strURL, std::string& strRespon
 	nIndex = str_httpResponseContent.find(L"(function ()");
 	if (nIndex == wstring::npos)
 	{
-		strResponse = "Token: bad format";
+		strResponse = L"Token: bad format";
 		return false;
 	}
 	str_httpResponseContent = str_httpResponseContent.substr(0, nIndex);
-//	strResponse = UTF16toUTF8(str_httpResponseContent);
+	string strToken = UTF16toUTF8(str_httpResponseContent);
+
+	//gv-token
+	duk_context* ctx = duk_create_heap_default();
+	if(!ctx)
+	{
+		strResponse = L"HEAP_CREATION_ERROR";
+		return false;
+	}
+	duk_push_global_object(ctx);
+	PUSH_C_FUNCTION(get_result_token, 1);
+	//run js
+	if (duk_peval_file(ctx, "jjdecode.js") == 0)
+	{
+		duk_pop(ctx);
+		duk_get_prop_string(ctx, -1, "jjdecode");
+		duk_push_string(ctx, strToken.c_str());
+ 		if (duk_pcall(ctx, 1) != 0)
+		{
+			strResponse = CString(duk_safe_to_string(ctx, -1));
+			duk_pop(ctx);
+			duk_destroy_heap(ctx);
+			return false;
+		}
+		duk_pop(ctx);
+	}
+	else
+	{
+		strResponse = CString(duk_safe_to_string(ctx, -1));
+		duk_pop(ctx);
+		duk_destroy_heap(ctx);
+		return false;
+	}
+
+	duk_pop(ctx);
+	duk_destroy_heap(ctx);
 	return true;
 }
 
@@ -647,12 +685,12 @@ std::wstring CRailTickesDlg::RequestBookong()
 
 	if (m_strToken.empty())
 	{
-		string strResponse;
-		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		wstring strResponse;
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
 		{
 			return CString(strResponse.c_str()).GetBuffer();
 		}
-		m_strToken = strResponse;
+		return L"Try to send a request once again";
 	}
 
 	int nCurrentPosForm = m_comboFrom.GetCurSel();
@@ -1132,12 +1170,11 @@ void CRailTickesDlg::OnBnClickedRadioBooking()
 	UpdateData(true);
 	if (!m_nBooking)
 	{
-		string strResponse;
-		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		wstring strResponse;
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
 		{
 			return;
 		}
-		m_strToken = strResponse;
 	}
 
 }
@@ -1148,11 +1185,35 @@ void CRailTickesDlg::OnBnClickedRadioDprc()
 	UpdateData(true);
 	if (!m_nBooking)
 	{
-		string strResponse;
-		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		wstring strResponse;
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
 		{
 			return;
 		}
-		m_strToken = strResponse;
 	}
+}
+
+duk_ret_t CRailTickesDlg::get_result_token (duk_context *ctx)
+{
+	if (m_pCRailTickesDlg)
+	{
+		m_pCRailTickesDlg->m_strToken = "";
+		string  strResult = duk_require_string(ctx, 0);
+		int nIndex = strResult.find("\"gv-token\", \"");
+		if (nIndex != string::npos)
+		{
+			nIndex += strlen("\"gv-token\", \"");
+			strResult = strResult.substr(nIndex);
+			int nLen = strResult.size();
+			for (int i =0; i < nLen; i++)
+			{
+				char c = strResult.at(i);
+				if (c == '\"')
+					break;
+				m_pCRailTickesDlg->m_strToken += c;
+			}
+		}
+	}
+	duk_push_null(ctx);
+	return 1;
 }
