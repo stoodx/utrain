@@ -51,7 +51,7 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	bool GetHeader(const std::wstring& strURL, std::string& strResponse);
+	bool GetToken(const std::wstring& strURL, std::string& strResponse);
 
 protected:
 	CComboBox m_comboFrom;
@@ -59,6 +59,7 @@ protected:
 private:
 	std::vector<Station*> m_vecpStationsFrom;
 	std::vector<Station*> m_vecpStationsTo;
+	std::string  m_strToken;
 public:
 	afx_msg void OnClose();
 	afx_msg void OnCbnSelchangeComboAFrom();
@@ -68,4 +69,7 @@ protected:
 	CMonthCalCtrl m_calendar;
 	CButton m_btnSearch;
 	int m_nBooking;
+public:
+	afx_msg void OnBnClickedRadioBooking();
+	afx_msg void OnBnClickedRadioDprc();
 };

@@ -33,6 +33,7 @@ struct Station
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
 	, m_nBooking(0)
+	, m_strToken("")
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -56,6 +57,8 @@ BEGIN_MESSAGE_MAP(CRailTickesDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_A_FROM, &CRailTickesDlg::OnCbnSelchangeComboAFrom)
 	ON_CBN_SELCHANGE(IDC_COMBO_A_TO, &CRailTickesDlg::OnCbnSelchangeComboATo)
 	ON_BN_CLICKED(IDOK, &CRailTickesDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_RADIO_BOOKING, &CRailTickesDlg::OnBnClickedRadioBooking)
+	ON_BN_CLICKED(IDC_RADIO_DPRC, &CRailTickesDlg::OnBnClickedRadioDprc)
 END_MESSAGE_MAP()
 
 
@@ -83,6 +86,15 @@ BOOL CRailTickesDlg::OnInitDialog()
 	m_comboA_From.SetCurSel(0);
 	m_comboA_To.SetCurSel(1);
 	UpdateData(FALSE);
+
+	if (!m_nBooking)
+	{
+		string strResponse;
+		if (GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		{
+			m_strToken = strResponse;
+		}
+	}
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
 		!FillStations(m_comboA_To, m_comboTo, m_vecpStationsTo))
@@ -576,7 +588,7 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.SetWindowText(L"Поиск");
 }
 
-bool CRailTickesDlg::GetHeader(const std::wstring& strURL, std::string& strResponse)
+bool CRailTickesDlg::GetToken(const std::wstring& strURL, std::string& strResponse)
 {
 	strResponse = "";
 	WinHttpClient request(strURL);
@@ -609,15 +621,40 @@ bool CRailTickesDlg::GetHeader(const std::wstring& strURL, std::string& strRespo
 		strResponse =  "No response";
 		return false;
 	}
-	strResponse = UTF16toUTF8(str_httpResponseCode );
+
+	int nIndex;
+	nIndex = str_httpResponseContent.find(L"gaq.push(['_trackPageview']);");
+	if (nIndex == wstring::npos)
+	{
+		strResponse = "Token: bad format";
+		return false;
+	}
+	nIndex += _tcslen(L"gaq.push(['_trackPageview']);");
+	str_httpResponseContent = str_httpResponseContent.substr(nIndex);
+	nIndex = str_httpResponseContent.find(L"(function ()");
+	if (nIndex == wstring::npos)
+	{
+		strResponse = "Token: bad format";
+		return false;
+	}
+	str_httpResponseContent = str_httpResponseContent.substr(0, nIndex);
+//	strResponse = UTF16toUTF8(str_httpResponseContent);
 	return true;
 }
 
 std::wstring CRailTickesDlg::RequestBookong()
 {
-	string strHeader;
-	GetHeader(L"http://booking.uz.gov.ua/", strHeader);
-	
+
+	if (m_strToken.empty())
+	{
+		string strResponse;
+		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		{
+			return CString(strResponse.c_str()).GetBuffer();
+		}
+		m_strToken = strResponse;
+	}
+
 	int nCurrentPosForm = m_comboFrom.GetCurSel();
 	int nCurrentPosTo = m_comboTo.GetCurSel();
 	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
@@ -1087,4 +1124,35 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 	strJSONResult.append(L"},");
 	strJSONResult.append(CR);
 	strJSONResult.append(L"}");
+}
+
+
+void CRailTickesDlg::OnBnClickedRadioBooking()
+{
+	UpdateData(true);
+	if (!m_nBooking)
+	{
+		string strResponse;
+		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		{
+			return;
+		}
+		m_strToken = strResponse;
+	}
+
+}
+
+
+void CRailTickesDlg::OnBnClickedRadioDprc()
+{
+	UpdateData(true);
+	if (!m_nBooking)
+	{
+		string strResponse;
+		if (!GetToken(L"http://booking.uz.gov.ua/", strResponse))
+		{
+			return;
+		}
+		m_strToken = strResponse;
+	}
 }
