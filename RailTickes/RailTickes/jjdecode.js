@@ -5,8 +5,7 @@ function jjdecode(it)
 			
 		//clean it
 		var t = it.replace(/^\s+|\s+$/g, "");
-		print(t);
-		
+	
 		
 		var startpos;
 		var endpos;

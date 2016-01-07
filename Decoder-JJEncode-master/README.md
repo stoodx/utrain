@@ -6,4 +6,4 @@ JJEncode is originally made by @hasegawayosuke - http://utf-8.jp/public/jjencode
 
 Here is a detailed analysis of how it works: http://pferrie2.tripod.com/papers/jjencode.pdf
 
-Для проверки токена
+For test token

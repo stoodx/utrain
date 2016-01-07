@@ -65,7 +65,9 @@ protected:
 private:
 	std::vector<Station*> m_vecpStationsFrom;
 	std::vector<Station*> m_vecpStationsTo;
-	std::string  m_strToken;
+	std::wstring  m_strToken;
+	std::wstring m_strResponseCookies;
+
 public:
 	afx_msg void OnClose();
 	afx_msg void OnCbnSelchangeComboAFrom();

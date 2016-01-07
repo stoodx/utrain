@@ -38,7 +38,8 @@ CRailTickesDlg* CRailTickesDlg::m_pCRailTickesDlg = NULL;
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
 	, m_nBooking(0)
-	, m_strToken("")
+	, m_strToken(L"")
+	, m_strResponseCookies(L"")
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pCRailTickesDlg = this;
@@ -96,7 +97,10 @@ BOOL CRailTickesDlg::OnInitDialog()
 	if (!m_nBooking)
 	{
 		wstring strResponse;
-		SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse);
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
+			AfxMessageBox(strResponse.c_str());
+		else
+			m_strResponseCookies = strResponse;
 	}
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
@@ -612,6 +616,7 @@ bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstrin
 
 	wstring str_httpResponseCode = request.GetResponseStatusCode();
 	wstring str_httpResponseContent = request.GetResponseContent();
+	wstring str_httpResponseCookies = request.GetResponseCookies();
 
 	if (str_httpResponseCode.compare(L"200"))
 	{
@@ -677,6 +682,7 @@ bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstrin
 
 	duk_pop(ctx);
 	duk_destroy_heap(ctx);
+	strResponse = str_httpResponseCookies;
 	return true;
 }
 
@@ -690,6 +696,8 @@ std::wstring CRailTickesDlg::RequestBookong()
 		{
 			return CString(strResponse.c_str()).GetBuffer();
 		}
+		else
+			m_strResponseCookies = strResponse;
 		return L"Try to send a request once again";
 	}
 
@@ -707,7 +715,7 @@ std::wstring CRailTickesDlg::RequestBookong()
 	
 	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/purchase/search/");
 	sprintf_s(strPost, 2 * MAX_PATH, 
-		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=0%d.0%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
+		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%d.%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
 		UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
 		UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
 		dateTime.wDay, dateTime.wMonth, dateTime.wYear);
@@ -721,6 +729,19 @@ std::wstring CRailTickesDlg::RequestBookong()
 	swprintf_s(szSize, L"%d", nLen);
 	strHeaders += szSize;
 	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	strHeaders += L"GV-Token: ";
+	strHeaders += m_strToken;
+	strHeaders += L"\r\nGV-Unique-Host: 1";
+	strHeaders += L"\r\nGV-Ajax: 1";
+	strHeaders += L"\r\nGV-Screen: 1920x1080";
+	strHeaders += L"\r\nGV-Referer: http://booking.uz.gov.ua/ru/";
+	strHeaders += L"\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*;q=0.8";
+	strHeaders += L"\r\nAccept-Language: ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2";
+	strHeaders += L"\r\nAccept-Encoding: gzip, deflate";
+	strHeaders += L"\r\nAccept: */*";
+	strHeaders += L"\r\nCookie: ";
+	strHeaders += m_strResponseCookies;
+	strHeaders += L"\r\n";
 	request.SetAdditionalRequestHeaders(strHeaders);
 	CString strError;
 
@@ -1173,8 +1194,11 @@ void CRailTickesDlg::OnBnClickedRadioBooking()
 		wstring strResponse;
 		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
 		{
+			AfxMessageBox(strResponse.c_str());
 			return;
 		}
+		else
+			m_strResponseCookies = strResponse;
 	}
 
 }
@@ -1188,8 +1212,11 @@ void CRailTickesDlg::OnBnClickedRadioDprc()
 		wstring strResponse;
 		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
 		{
+			AfxMessageBox(strResponse.c_str());
 			return;
 		}
+		else
+			m_strResponseCookies = strResponse;
 	}
 }
 
@@ -1197,7 +1224,7 @@ duk_ret_t CRailTickesDlg::get_result_token (duk_context *ctx)
 {
 	if (m_pCRailTickesDlg)
 	{
-		m_pCRailTickesDlg->m_strToken = "";
+		m_pCRailTickesDlg->m_strToken = L"";
 		string  strResult = duk_require_string(ctx, 0);
 		int nIndex = strResult.find("\"gv-token\", \"");
 		if (nIndex != string::npos)
@@ -1210,7 +1237,7 @@ duk_ret_t CRailTickesDlg::get_result_token (duk_context *ctx)
 				char c = strResult.at(i);
 				if (c == '\"')
 					break;
-				m_pCRailTickesDlg->m_strToken += c;
+				m_pCRailTickesDlg->m_strToken += CString(c);
 			}
 		}
 	}
