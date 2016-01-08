@@ -97,7 +97,7 @@ BOOL CRailTickesDlg::OnInitDialog()
 	if (!m_nBooking)
 	{
 		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 			AfxMessageBox(strResponse.c_str());
 		else
 			m_strResponseCookies = strResponse;
@@ -258,7 +258,7 @@ bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStat
 	comboStation.ResetContent();
 	CleanStations(&vecpStations);
 
-	wstring strURL(L"http://booking.uz.gov.ua/purchase/station/");
+	wstring strURL(L"http://booking.uz.gov.ua/ru/purchase/station/");
 	CString strA;
 	comboA.GetLBText(comboA.GetCurSel(), strA);
 	strURL.append(strA);
@@ -692,7 +692,7 @@ std::wstring CRailTickesDlg::RequestBookong()
 	if (m_strToken.empty())
 	{
 		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 		{
 			return CString(strResponse.c_str()).GetBuffer();
 		}
@@ -712,13 +712,24 @@ std::wstring CRailTickesDlg::RequestBookong()
 	m_calendar.GetCurSel(&dateTime);
 	wchar_t strURL[MAX_PATH] = {0};
 	char strPost[MAX_PATH * 2] = {0};
-	
-	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/purchase/search/");
+
+	char strDay[3] = {0};
+	char strMonth[3] = {0};
+	if (dateTime.wDay < 10)
+		sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
+	else
+		sprintf_s(strDay, 3,  "%d", dateTime.wDay);
+	if (dateTime.wMonth < 10)
+		sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
+	else
+		sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);
+
+	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
 	sprintf_s(strPost, 2 * MAX_PATH, 
-		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%d.%d.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
+		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%s.%s.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
 		UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
 		UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
-		dateTime.wDay, dateTime.wMonth, dateTime.wYear);
+		strDay, strMonth, dateTime.wYear);
 		
 	WinHttpClient request(strURL);
 	// Set request headers.
@@ -919,6 +930,15 @@ end:
 
 void CRailTickesDlg::ParserBooking(std::wstring& strResponse, std::wstring& strJSONResult)
 {
+	strResponse = PrintUTF16Converter(strResponse);
+	
+	//int nIndex = strResponse.find(L"\"error\":true");
+	//if (nIndex != wstring::npos)
+	{//error
+		strJSONResult = strResponse;
+		return;
+	}
+	
 }
 
 void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSONResult)
@@ -1192,7 +1212,7 @@ void CRailTickesDlg::OnBnClickedRadioBooking()
 	if (!m_nBooking)
 	{
 		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 		{
 			AfxMessageBox(strResponse.c_str());
 			return;
@@ -1210,7 +1230,7 @@ void CRailTickesDlg::OnBnClickedRadioDprc()
 	if (!m_nBooking)
 	{
 		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/", strResponse))
+		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 		{
 			AfxMessageBox(strResponse.c_str());
 			return;
