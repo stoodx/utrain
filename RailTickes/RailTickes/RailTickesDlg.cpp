@@ -682,8 +682,66 @@ bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstrin
 
 	duk_pop(ctx);
 	duk_destroy_heap(ctx);
-	strResponse = str_httpResponseCookies;
+
+	//cookies
+	//_gv_sessid
+	nIndex = str_httpResponseCookies.find(L"_gv_sessid");
+	int nLen = str_httpResponseCookies.size();
+	wstring strTmp;
+	int i;
+	wchar_t c;
+	if (nIndex == wstring::npos)
+	{
+		strResponse = L"No _gv_sessid";
+		return false;
+	}
+	for(i = nIndex; i < nLen; i++)
+	{
+		c = str_httpResponseCookies.at(i);
+		strResponse += c;
+		if (c == L';')
+			break;
+	}
+	strResponse += L' ';
+	//_gv_lang
+	nIndex = str_httpResponseCookies.find(L"_gv_lang");
+	if (nIndex == wstring::npos)
+	{
+		strResponse = L"No _gv_lang";
+		return false;
+	}
+	for(i = nIndex; i < nLen; i++)
+	{
+		c = str_httpResponseCookies.at(i);
+		strResponse += c;
+		if (c == L';')
+			break;
+	}
+	strResponse += L' ';
+	//HTTPSERVERID
+	nIndex = str_httpResponseCookies.find(L"HTTPSERVERID");
+	if (nIndex == wstring::npos)
+	{
+		strResponse = L"No HTTPSERVERID";
+		return false;
+	}
+	for(i = nIndex; i < nLen; i++)
+	{
+		c = str_httpResponseCookies.at(i);
+		strResponse += c;
+		if (c == L';')
+			break;
+	}
+	strResponse += L' ';
 	return true;
+}
+
+
+std::wstring CRailTickesDlg::CreateUTMCokies()
+{
+	wstring strCookies(L" ");
+
+	return strCookies;
 }
 
 std::wstring CRailTickesDlg::RequestBookong()
@@ -752,6 +810,7 @@ std::wstring CRailTickesDlg::RequestBookong()
 	strHeaders += L"\r\nAccept: */*";
 	strHeaders += L"\r\nCookie: ";
 	strHeaders += m_strResponseCookies;
+	strHeaders += CreateUTMCokies();
 	strHeaders += L"\r\n";
 	request.SetAdditionalRequestHeaders(strHeaders);
 	CString strError;

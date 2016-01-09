@@ -58,6 +58,7 @@ private:
 	bool SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse);
 	static duk_ret_t get_result_token(duk_context *ctx);
 	static CRailTickesDlg* m_pCRailTickesDlg;
+	std::wstring CreateUTMCokies();
 
 protected:
 	CComboBox m_comboFrom;
