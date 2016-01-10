@@ -848,12 +848,25 @@ std::wstring CRailTickesDlg::RequestDPRC()
 	const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
 	const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
 
+
 	SYSTEMTIME dateTime;
 	m_calendar.GetCurSel(&dateTime);
+	
+	char strDay[3] = {0};
+	char strMonth[3] = {0};
+	if (dateTime.wDay < 10)
+		sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
+	else
+		sprintf_s(strDay, 3,  "%d", dateTime.wDay);
+	if (dateTime.wMonth < 10)
+		sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
+	else
+		sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);	
+	
 	wchar_t strURL[MAX_PATH] = {0};
 	if (m_nBooking)
-		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%d-%d&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
-			strIDFrom, strIDTo, dateTime.wYear,  dateTime.wMonth, dateTime.wDay);
+		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%s-%s&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
+			strIDFrom, strIDTo, dateTime.wYear,  strMonth, strDay);
 
 	WinHttpClient request(strURL);
 	// Set request headers.
