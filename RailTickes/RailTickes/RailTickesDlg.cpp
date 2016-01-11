@@ -40,9 +40,11 @@ CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	, m_nBooking(0)
 	, m_strToken(L"")
 	, m_strResponseCookies(L"")
+	, m_nVisitBooking(1)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pCRailTickesDlg = this;
+	timeFirstVisit = time(nullptr);
 }
 
 void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
@@ -739,7 +741,43 @@ bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstrin
 
 std::wstring CRailTickesDlg::CreateUTMCokies()
 {
-	wstring strCookies(L" ");
+	wstring strCookies(L" __utma=");
+
+	//hash domain
+	hash<wstring> hash;
+	wstring strDomain = L"kvy.com.ua";
+	wstring strHashDomain = to_wstring(hash(strDomain)); //L"31515437";
+	wstring strTimeCurrentVisit = to_wstring(time(nullptr));
+
+	//utma
+	strCookies += strHashDomain;
+	strCookies += L'.';
+	strCookies += to_wstring(21589326); //ID user in Google Analistics
+	strCookies += L'.';
+	strCookies += to_wstring(timeFirstVisit); //first visit
+	strCookies += L'.';
+	strCookies += to_wstring(timeFirstVisit);//prev. visit
+	strCookies += L'.';
+	strCookies += strTimeCurrentVisit;//curr. visit
+	strCookies += L'.';
+	strCookies += to_wstring(m_nVisitBooking++);
+	strCookies += L"; __utmb=";
+
+	//utmb
+	strCookies += strHashDomain;
+	strCookies += L".2.10.";
+	strCookies += strTimeCurrentVisit;//curr. visit
+	strCookies += L"; __utmc=";
+
+	//utmc
+	strCookies += strHashDomain;
+	strCookies += L"; __utmt=1; __utmz=";
+
+	//utmz
+	strCookies += strHashDomain;
+	strCookies += L'.';
+	strCookies += strTimeCurrentVisit;//curr. visit
+	strCookies += L".1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none);";
 
 	return strCookies;
 }
@@ -784,7 +822,7 @@ std::wstring CRailTickesDlg::RequestBookong()
 
 	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
 	sprintf_s(strPost, 2 * MAX_PATH, 
-		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%s.%s.%d&time_dep=00:00&time_dep_till=&another_ec=0&search=",
+		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%s.%s.%d&time_dep=00%%3A00&time_dep_till=&another_ec=0&search=",
 		UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
 		UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
 		strDay, strMonth, dateTime.wYear);
@@ -797,7 +835,7 @@ std::wstring CRailTickesDlg::RequestBookong()
 	wchar_t szSize[50] = L"";
 	swprintf_s(szSize, L"%d", nLen);
 	strHeaders += szSize;
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	strHeaders += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n";
 	strHeaders += L"GV-Token: ";
 	strHeaders += m_strToken;
 	strHeaders += L"\r\nGV-Unique-Host: 1";
@@ -808,10 +846,13 @@ std::wstring CRailTickesDlg::RequestBookong()
 	strHeaders += L"\r\nAccept-Language: ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2";
 	strHeaders += L"\r\nAccept-Encoding: gzip, deflate";
 	strHeaders += L"\r\nAccept: */*";
+	strHeaders += L"\r\nReferer: http://booking.uz.gov.ua/ru/";
 	strHeaders += L"\r\nCookie: ";
 	strHeaders += m_strResponseCookies;
 	strHeaders += CreateUTMCokies();
 	strHeaders += L"\r\n";
+    strHeaders += L"Connection: keep-alive\r\n\r\n";
+
 	request.SetAdditionalRequestHeaders(strHeaders);
 	CString strError;
 
@@ -1002,14 +1043,7 @@ end:
 
 void CRailTickesDlg::ParserBooking(std::wstring& strResponse, std::wstring& strJSONResult)
 {
-	strResponse = PrintUTF16Converter(strResponse);
-	
-	//int nIndex = strResponse.find(L"\"error\":true");
-	//if (nIndex != wstring::npos)
-	{//error
-		strJSONResult = strResponse;
-		return;
-	}
+	strJSONResult = PrintUTF16Converter(strResponse);
 	
 }
 

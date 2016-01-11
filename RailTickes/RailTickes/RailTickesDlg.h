@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include <vector>
 #include "afxdtctl.h"
+#include <ctime>
 
 extern "C" {
 #include "duktape\duktape.h"
@@ -59,6 +60,7 @@ private:
 	static duk_ret_t get_result_token(duk_context *ctx);
 	static CRailTickesDlg* m_pCRailTickesDlg;
 	std::wstring CreateUTMCokies();
+	std::time_t timeFirstVisit;
 
 protected:
 	CComboBox m_comboFrom;
@@ -68,6 +70,7 @@ private:
 	std::vector<Station*> m_vecpStationsTo;
 	std::wstring  m_strToken;
 	std::wstring m_strResponseCookies;
+	int m_nVisitBooking;
 
 public:
 	afx_msg void OnClose();
