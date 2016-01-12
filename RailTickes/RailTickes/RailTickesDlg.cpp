@@ -22,7 +22,7 @@
 // CRailTickesDlg dialog
 
 const wchar_t* g_strAlphabet[] = 
-{ L"А", L"Б", L"В", L"Г", L"Д", L"Е",  L"Ё", L"Ж", L"3", L"И", L"К", L"Л", L"М", L"Н", L"О", L"П", 
+{ L"А", L"Б", L"В", L"Г", L"Д", L"Е",  L"Ё", L"Ж", L"З", L"И", L"К", L"Л", L"М", L"Н", L"О", L"П", 
 	L"Р", L"С", L"Т", L"У", L"Ф", L"Х", L"Ц", L"Щ", L"Ш ", L"Э", L"Ю", L"Я", NULL 
 };
 
