@@ -28,6 +28,10 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
+	enum
+	{
+		timerRefreshSession = 0
+	};
 
 // Implementation
 protected:
@@ -84,4 +88,5 @@ protected:
 public:
 	afx_msg void OnBnClickedRadioBooking();
 	afx_msg void OnBnClickedRadioDprc();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

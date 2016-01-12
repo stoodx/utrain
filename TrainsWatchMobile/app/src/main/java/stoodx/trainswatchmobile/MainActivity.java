@@ -46,6 +46,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public String str3;
     }
 
+    public enum _status{
+        _empty,
+        _start,
+        _0,
+        _1,
+        _2,
+        _3
+    }
+
     private List<Station> m_arrayStationsFrom;
     private List<Station> m_arrayStationsTo;
 
@@ -143,9 +152,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private boolean sendStationsFilling(Spinner spinnerA,  int pos) {
         //clear all lists
-        String strURL = "http://dprc.gov.ua/awg/xml?class_name=IStations&method_name=search_station&var_0=3&var_1=2&var_2=0&var_3=16&var_4=" +
+    //    String strURL = "http://dprc.gov.ua/awg/xml?class_name=IStations&method_name=search_station&var_0=3&var_1=2&var_2=0&var_3=16&var_4=" +
+    //            spinnerA.getItemAtPosition(pos);
+        String strURL = "http://booking.uz.gov.ua/ru/purchase/station/" +
                 spinnerA.getItemAtPosition(pos);
-
         sendHTTPRequest(strURL, spinnerA.getId());
         return true;
     }
@@ -232,10 +242,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         switch (id) {
             case R.id.spinnerFromA:
-                fillStations(strResponse, m_spinnerFrom, m_arrayStationsFrom);
+                fillStationsBooking(strResponse, m_spinnerFrom, m_arrayStationsFrom);
                 break;
             case R.id.spinnerToA:
-                fillStations(strResponse, m_spinnerTo, m_arrayStationsTo);
+                fillStationsBooking(strResponse, m_spinnerTo, m_arrayStationsTo);
                 break;
             case -1: //request
                 responseRequest(strResponse);
@@ -245,7 +255,171 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    private boolean fillStations(String strResponse, Spinner spinner, List<Station> arr)
+    private boolean fillStationsBooking(String strResponse, Spinner spinner, List<Station> arr)
+    {
+        arr.clear();
+        ArrayAdapter adap = (ArrayAdapter) spinner.getAdapter();
+        adap.clear();
+        adap.notifyDataSetChanged();
+
+        int nIndex = strResponse.indexOf("{\"value\":[{");
+        if (nIndex == -1){
+            messageBox("Увага", "Зіпсований формат з сайту: " + strResponse);
+            return false;
+        }
+        nIndex += "{\"value\":[{".length();
+        strResponse =  strResponse.substring(nIndex);
+        while(true){
+            nIndex = strResponse.indexOf("\"title\":\"");
+            if (nIndex == -1)
+                break;
+
+            nIndex += "\"title\":\"".length();
+            strResponse =  strResponse.substring(nIndex);
+            int nLen = strResponse.length();
+            if ( nLen == 0)
+                break;
+
+            //station name
+            int i;
+            char c;
+            String strName = "";
+            for (i = 0; i < nLen; i++){
+                c = strResponse.charAt(i);
+                if (c == '\"')
+                    break;
+                strName += c;
+            }
+
+            //id;
+            nIndex = strResponse.indexOf("\"station_id\":");
+            if (nIndex == -1)
+                break;
+            nIndex += "\"station_id\":".length();
+            strResponse =  strResponse.substring(nIndex);
+            nLen = strResponse.length();
+            if ( nLen == 0)
+                break;
+            String strID = "";
+            for(i = 0; i < nLen; i++){
+                c = strResponse.charAt(i);
+                if (c == '}')
+                    break;
+                strID += c;
+            }
+
+            Station station = new Station();
+            station.m_strID = strID;
+            station.m_strName = printUTF16Converter(strName);
+            arr.add(station);
+        }
+
+        int nSize = arr.size();
+        if (nSize == 0){
+            messageBox("Увага", "Немає станцій");
+            return false;
+        }
+        for(int j = 0; j < nSize; j++){
+            Station st = arr.get(j);
+            adap.add(st.m_strName);
+        }
+        adap.notifyDataSetChanged();
+        spinner.setSelection(0);
+        return true;
+    }
+
+    private String printUTF16Converter(String str){
+        String strResponse = "";
+        _status status = _status._empty;
+
+        int nLen = str.length();
+        if (nLen == 0)
+            return strResponse;
+
+        char ch;
+        String strConvert = "";
+        char[] chNumber = {'0','1','2','3','4','5','6','7','8','9', 'a', 'b', 'c', 'd', 'e', 'f'};
+        char[] nNumber = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
+
+        for(int i = 0; i < nLen; i++){
+            ch = str.charAt(i);
+            switch (status)
+            {
+                case _empty:
+                    if (ch == '\\')
+                    {
+                        status = _status._start;
+                    }
+                    else
+                        strResponse += ch;
+                    break;
+                case _start:
+                    if (ch != 'u')
+                    {
+                        status = _status._empty;
+                        strResponse += '\\';
+                        strResponse += ch;
+                    }
+                    else
+                    status = _status._0;
+                    break;
+                case _0:
+                    strConvert = "";
+                    strConvert += ch;
+                    status = _status._1;
+                    break;
+                case _1:
+                    strConvert += ch;
+                    status = _status._2;
+                    break;
+                case _2:
+                    strConvert += ch;
+                    status = _status._3;
+                    break;
+                case _3:
+                {
+                    strConvert += ch;
+                    status = _status._empty;
+                    char[] strBuf = {0,0,0,0,0};
+                    char[] chs  = {0,0,0,0};
+                    char[] n  = {0,0,0,0};
+                    chs[0]  = strConvert.charAt(0);
+                    chs[1]  = strConvert.charAt(1);
+                    chs[2]  = strConvert.charAt(2);
+                    chs[3]  = strConvert.charAt(3);
+                    int j;
+                    for (j = 0; j < 4; j++)
+                    {
+                        int m = 0;
+                        while ( m < 16)
+                        {
+                            if (chs[j] == chNumber[m])
+                                break;
+                            m++;
+                        }
+                        n[j] = nNumber[m];
+                    }
+                    n[2] = (char)(n[2] << 4);
+                    strBuf[0] |= n[2];
+                    strBuf[0] |= n[3];
+                    n[0] = (char)(n[0] << 4);
+                    strBuf[1] |= n[0];
+                    strBuf[1] |= n[1];
+                    strResponse += strBuf;
+                }
+                break;
+                default:
+                    break;
+            }
+
+
+        }
+
+        return strResponse;
+    }
+
+
+    private boolean fillStationsDPRC(String strResponse, Spinner spinner, List<Station> arr)
     {
         arr.clear();
         ArrayAdapter adap = (ArrayAdapter) spinner.getAdapter();

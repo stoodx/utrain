@@ -15,6 +15,9 @@
 
 #define CR L"\n" 
 
+#define TIMER_REFRESH_SESSION 15 * 60 * 1000 //15 min
+
+
 #define PUSH_C_FUNCTION(fcn, nargs) \
 	duk_push_c_function(ctx, fcn, nargs);\
 	duk_put_prop_string(ctx, -2, #fcn);
@@ -68,6 +71,7 @@ BEGIN_MESSAGE_MAP(CRailTickesDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CRailTickesDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_RADIO_BOOKING, &CRailTickesDlg::OnBnClickedRadioBooking)
 	ON_BN_CLICKED(IDC_RADIO_DPRC, &CRailTickesDlg::OnBnClickedRadioDprc)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -175,7 +179,7 @@ std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 	wchar_t ch;
 	int nLen = str.size();
 	wstring strConvert;
-	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', 'f'};
+	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', L'f'};
 	unsigned char nNumber[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
 
 	for(int i = 0; i < nLen; i++)
@@ -492,6 +496,7 @@ void CRailTickesDlg::CleanStations(std::vector<Station*>* pvecpStations)
 
 void CRailTickesDlg::OnClose()
 {
+	KillTimer(timerRefreshSession);
 	CleanStations(&m_vecpStationsFrom);
 	CleanStations(&m_vecpStationsTo);
 	m_pCRailTickesDlg = NULL;
@@ -584,7 +589,7 @@ void CRailTickesDlg::OnBnClickedOk()
 		return;
 	
 	m_btnSearch.EnableWindow(FALSE);
-	m_btnSearch.SetWindowText(L"Îæèäàéòå...");
+	m_btnSearch.SetWindowText(L"Ожидайте...");
 
 	wstring strJSON;
 	if (m_nBooking)
@@ -594,7 +599,7 @@ void CRailTickesDlg::OnBnClickedOk()
 
 	AfxMessageBox(strJSON.c_str(), MB_OK | MB_ICONINFORMATION); 
 	m_btnSearch.EnableWindow(TRUE);
-	m_btnSearch.SetWindowText(L"Ïîèñê");
+	m_btnSearch.SetWindowText(L"Поиск");
 }
 
 bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
@@ -735,6 +740,7 @@ bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstrin
 			break;
 	}
 	strResponse += L' ';
+	SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
 	return true;
 }
 
@@ -1369,4 +1375,25 @@ duk_ret_t CRailTickesDlg::get_result_token (duk_context *ctx)
 	}
 	duk_push_null(ctx);
 	return 1;
+}
+
+
+void CRailTickesDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: Add your message handler code here and/or call default
+	if (timerRefreshSession == nIDEvent)
+	{
+		UpdateData(TRUE);
+		if (!m_nBooking)
+		{
+			wstring strResponse;
+			if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+				AfxMessageBox(strResponse.c_str());
+			else
+				m_strResponseCookies = strResponse;
+		}
+		return;
+	}
+
+	CDialogEx::OnTimer(nIDEvent);
 }
