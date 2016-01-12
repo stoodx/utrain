@@ -1,4 +1,4 @@
-
+п»ї
 // RailTickesDlg.cpp : implementation file
 //
 
@@ -22,8 +22,8 @@
 // CRailTickesDlg dialog
 
 const wchar_t* g_strAlphabet[] = 
-{ L"А", L"Б", L"В", L"Г", L"Д", L"Е",  L"Ж", L"З", L"И", L"К", L"Л", L"М", L"Н", L"О", L"П", L"Р", 
-	L"С", L"Т", L"У", L"Ф", L"Х", L"Ц", L"Ч", L"Ш", L"Щ ", L"Э", L"Ю", L"Я", NULL 
+{ L"Рђ", L"Р‘", L"Р’", L"Р“", L"Р”", L"Р•",  L"РЃ", L"Р–", L"3", L"Р", L"Рљ", L"Р›", L"Рњ", L"Рќ", L"Рћ", L"Рџ", 
+	L"Р ", L"РЎ", L"Рў", L"РЈ", L"Р¤", L"РҐ", L"Р¦", L"Р©", L"РЁ ", L"Р­", L"Р®", L"РЇ", NULL 
 };
 
 struct Station
@@ -584,7 +584,7 @@ void CRailTickesDlg::OnBnClickedOk()
 		return;
 	
 	m_btnSearch.EnableWindow(FALSE);
-	m_btnSearch.SetWindowText(L"Ожидайте...");
+	m_btnSearch.SetWindowText(L"ГЋГ¦ГЁГ¤Г Г©ГІГҐ...");
 
 	wstring strJSON;
 	if (m_nBooking)
@@ -594,7 +594,7 @@ void CRailTickesDlg::OnBnClickedOk()
 
 	AfxMessageBox(strJSON.c_str(), MB_OK | MB_ICONINFORMATION); 
 	m_btnSearch.EnableWindow(TRUE);
-	m_btnSearch.SetWindowText(L"Поиск");
+	m_btnSearch.SetWindowText(L"ГЏГ®ГЁГ±ГЄ");
 }
 
 bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
