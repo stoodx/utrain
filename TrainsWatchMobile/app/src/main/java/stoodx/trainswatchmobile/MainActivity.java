@@ -25,13 +25,16 @@ import com.android.volley.toolbox.Volley;
 
 import com.loopj.android.http.*;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import cz.msebera.android.httpclient.Header;
-
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -44,15 +47,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public String str1;
         public String str2;
         public String str3;
-    }
-
-    public enum _status{
-        _empty,
-        _start,
-        _0,
-        _1,
-        _2,
-        _3
     }
 
     private List<Station> m_arrayStationsFrom;
@@ -72,10 +66,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_nIDSpinner = new int[3];
+        m_nIDSpinner = new int[4];
         m_nIDSpinner[0] = 0;
         m_nIDSpinner[1] = 0;
         m_nIDSpinner[2] = 0;
+        m_nIDSpinner[3] = 0;
 
         m_arrayStationsFrom = new ArrayList<Station>();
         m_arrayStationsTo = new ArrayList<Station>();
@@ -154,16 +149,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         //clear all lists
     //    String strURL = "http://dprc.gov.ua/awg/xml?class_name=IStations&method_name=search_station&var_0=3&var_1=2&var_2=0&var_3=16&var_4=" +
     //            spinnerA.getItemAtPosition(pos);
-        String strURL = "http://booking.uz.gov.ua/ru/purchase/station/" +
+        String strURL = "http://booking.uz.gov.ua/purchase/station/" +
                 spinnerA.getItemAtPosition(pos);
         sendHTTPRequest(strURL, spinnerA.getId());
         return true;
     }
-/*
+
     private void sendHTTPRequest(String strURL, int id){
         int i;
         synchronized (m_nIDSpinner) {
-            for (i = 0; i < 3; i++) {
+            for (i = 0; i < 4; i++) {
                 if (m_nIDSpinner[i] == 0) {
                     m_nIDSpinner[i] = id;
                     break;
@@ -180,8 +175,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 // called when response HTTP status is "200 OK"
-                String strResponse = response.toString();
-                handleResponse(strResponse);
+                try {
+                    String strResponse = String.valueOf(new String(response, "UTF-8"));
+                    handleResponse(strResponse);
+                }catch (UnsupportedEncodingException e){
+                    messageBox("Увага", "Exception: " +  e.getMessage());
+                }
             }
 
             @Override
@@ -190,15 +189,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
             }
         });
-    }*/
+    }
 
-
+/*
     private void sendHTTPRequest(String strURL, int id) {
         RequestQueue queue = Volley.newRequestQueue(this);
         // Request a string response from the provided URL.
         int i;
         synchronized (m_nIDSpinner) {
-            for (i = 0; i < 3; i++) {
+            for (i = 0; i < 4; i++) {
                 if (m_nIDSpinner[i] == 0) {
                     m_nIDSpinner[i] = id;
                     break;
@@ -224,12 +223,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
-
+*/
     private void handleResponse(String strResponse){
         int id = 0;
         int i;
         synchronized (m_nIDSpinner) {
-            for (i = 0; i < 3; i++) {
+            for (i = 0; i < 4; i++) {
                 if (m_nIDSpinner[i] != 0) {
                     id = m_nIDSpinner[i];
                     m_nIDSpinner[i] = 0;
@@ -310,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             Station station = new Station();
             station.m_strID = strID;
-            station.m_strName = printUTF16Converter(strName);
+            station.m_strName = printUTF8Converter(strName);
             arr.add(station);
         }
 
@@ -328,91 +327,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
-    private String printUTF16Converter(String str){
+    private String printUTF8Converter(String str){
         String strResponse = "";
-        _status status = _status._empty;
-
-        int nLen = str.length();
-        if (nLen == 0)
+        if (str.length()== 0)
             return strResponse;
-
-        char ch;
-        String strConvert = "";
-        char[] chNumber = {'0','1','2','3','4','5','6','7','8','9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        char[] nNumber = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
-
-        for(int i = 0; i < nLen; i++){
-            ch = str.charAt(i);
-            switch (status)
-            {
-                case _empty:
-                    if (ch == '\\')
-                    {
-                        status = _status._start;
-                    }
-                    else
-                        strResponse += ch;
-                    break;
-                case _start:
-                    if (ch != 'u')
-                    {
-                        status = _status._empty;
-                        strResponse += '\\';
-                        strResponse += ch;
-                    }
-                    else
-                    status = _status._0;
-                    break;
-                case _0:
-                    strConvert = "";
-                    strConvert += ch;
-                    status = _status._1;
-                    break;
-                case _1:
-                    strConvert += ch;
-                    status = _status._2;
-                    break;
-                case _2:
-                    strConvert += ch;
-                    status = _status._3;
-                    break;
-                case _3:
-                {
-                    strConvert += ch;
-                    status = _status._empty;
-                    char[] strBuf = {0,0,0,0,0};
-                    char[] chs  = {0,0,0,0};
-                    char[] n  = {0,0,0,0};
-                    chs[0]  = strConvert.charAt(0);
-                    chs[1]  = strConvert.charAt(1);
-                    chs[2]  = strConvert.charAt(2);
-                    chs[3]  = strConvert.charAt(3);
-                    int j;
-                    for (j = 0; j < 4; j++)
-                    {
-                        int m = 0;
-                        while ( m < 16)
-                        {
-                            if (chs[j] == chNumber[m])
-                                break;
-                            m++;
-                        }
-                        n[j] = nNumber[m];
-                    }
-                    n[2] = (char)(n[2] << 4);
-                    strBuf[0] |= n[2];
-                    strBuf[0] |= n[3];
-                    n[0] = (char)(n[0] << 4);
-                    strBuf[1] |= n[0];
-                    strBuf[1] |= n[1];
-                    strResponse += strBuf;
-                }
-                break;
-                default:
-                    break;
-            }
-
-
+        try {
+            Properties p = new Properties();
+            p.load(new StringReader("key=" + str));
+            strResponse = p.getProperty("key");
+        }catch (IOException e){
+            messageBox("Увага", "Exception: " +  e.getMessage());
         }
 
         return strResponse;
