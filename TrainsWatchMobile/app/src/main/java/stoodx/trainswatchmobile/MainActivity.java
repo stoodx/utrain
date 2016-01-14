@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private String m_strCalendar;
 
+    private  String m_strToken;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_arrayStationsTo = new ArrayList<Station>();
 
         m_strCalendar = "";
+        m_strToken = "";
 
         //From
         m_spinnerFromA = (Spinner) findViewById(R.id.spinnerFromA);
@@ -106,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 android.R.layout.simple_spinner_item,  listTo);
         adapterFrom.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinnerTo.setAdapter(adapterTo);
+
+        SendRequestForToken();
     }
 
     public void onItemSelected(AdapterView<?> parent, View view,
@@ -155,6 +160,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
+    private void SendRequestForToken(){
+        sendHTTPRequest("http://booking.uz.gov.ua", -2);
+    }
+
+
     private void sendHTTPRequest(String strURL, int id){
         int i;
         synchronized (m_nIDSpinner) {
@@ -165,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
             }
         }
-        if (id == 3){
+        if (id == 4){
             messageBox("Увага", "Перевищено поріг запитів до сайту");
             return;
         }
@@ -177,9 +187,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 // called when response HTTP status is "200 OK"
                 try {
                     String strResponse = String.valueOf(new String(response, "UTF-8"));
-                    handleResponse(strResponse);
-                }catch (UnsupportedEncodingException e){
-                    messageBox("Увага", "Exception: " +  e.getMessage());
+                    handleResponse(strResponse, headers);
+                } catch (UnsupportedEncodingException e) {
+                    messageBox("Увага", "Exception: " + e.getMessage());
                 }
             }
 
@@ -204,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
             }
         }
-        if (id == 3){
+        if (id == 4){
             messageBox("Увага", "Перевищено поріг запитів до сайту");
             return;
         }
@@ -224,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         queue.add(stringRequest);
     }
 */
-    private void handleResponse(String strResponse){
+    private void handleResponse(String strResponse, Header[] headers){
         int id = 0;
         int i;
         synchronized (m_nIDSpinner) {
@@ -236,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
             }
         }
-        if (i == 3){
+        if (i == 4){
             return;
         }
         switch (id) {
@@ -249,9 +259,43 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case -1: //request
                 responseRequest(strResponse);
                 break;
+            case -2:
+                responseToken(strResponse, headers);
+                break;
             default:
                 break;
         }
+    }
+
+    private boolean responseToken(String strResponse, Header[] headers){
+
+        if (headers.length == 0){
+            messageBox("Увага", "Нема cookies з сайту: " + strResponse);
+            return false;
+        }
+
+        int nIndex = strResponse.indexOf("gaq.push(['_trackPageview']);");
+        if (nIndex == -1){
+            messageBox("Увага", "Зіпсований формат токена з сайту: " + strResponse);
+            return false;
+        }
+        nIndex += "gaq.push(['_trackPageview']);".length();
+        strResponse =  strResponse.substring(nIndex);
+        nIndex = strResponse.indexOf("(function ()");
+        if (nIndex == -1){
+            messageBox("Увага", "Зіпсований формат токена з сайту: " + strResponse);
+            return false;
+        }
+        String strTokenEncode =  strResponse.substring(0, nIndex);
+        m_strToken = jjdecode(strTokenEncode);
+
+        return true;
+    }
+
+    private String jjdecode(String it){
+        String buffer = "";
+
+        return buffer;
     }
 
     private boolean fillStationsBooking(String strResponse, Spinner spinner, List<Station> arr)
