@@ -36,6 +36,7 @@ import java.util.Properties;
 
 import cz.msebera.android.httpclient.Header;
 
+
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     public class Station {
@@ -56,12 +57,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Spinner m_spinnerToA;
     private Spinner m_spinnerFrom;
     private Spinner m_spinnerTo;
-
     private int[] m_nIDSpinner;
-
     private String m_strCalendar;
-
-    private  String m_strToken;
+    private String m_strToken;
+    private String m_strResponseCookies;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         m_strCalendar = "";
         m_strToken = "";
+        m_strResponseCookies = "";
 
         //From
         m_spinnerFromA = (Spinner) findViewById(R.id.spinnerFromA);
@@ -270,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean responseToken(String strResponse, Header[] headers){
 
         if (headers.length == 0){
-            messageBox("Увага", "Нема cookies з сайту: " + strResponse);
+            messageBox("Увага", "Немає cookies з сайту: " + strResponse);
             return false;
         }
 
@@ -286,10 +286,64 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             messageBox("Увага", "Зіпсований формат токена з сайту: " + strResponse);
             return false;
         }
+        m_strToken = "";
         String strTokenEncode =  strResponse.substring(0, nIndex);
-        m_strToken = jjdecode(strTokenEncode);
+        String strToken = jjdecode(strTokenEncode);
+        if (strToken.length() == 0)
+            return false;
+        nIndex = strToken.indexOf("\"gv-token\", \"");
+        if (nIndex == -1) {
+            messageBox("Увага", "Зіпсований формат токена з сайту: " + strToken);
+            return false;
+        }
+        nIndex += "\"gv-token\", \"".length();
+        strToken = strToken.substring(nIndex);
+        int nLen = strToken.length();
+        int i;
+        char c;
+        for (i = 0; i < nLen; i++){
+            c = strToken.charAt(i);
+            if (c == '\"')
+                break;
+            m_strToken += c;
+        }
+
+        //cookies
+        m_strResponseCookies = "";
+        for (Header header : headers){
+            if (header.getName().equals("Set-Cookie")){
+                String str = header.getValue();
+                String strRes = "";
+
+                nIndex = str.indexOf("_gv_sessid");
+                if (nIndex == -1){
+                    nIndex = str.indexOf("_gv_lang");
+                    if (nIndex == -1) {
+                        nIndex = str.indexOf("HTTPSERVERID");
+                        if (nIndex == -1){
+                            messageBox("Увага", "Немає cookies з сайту");
+                            return false;
+                        }
+                    }
+                }
+
+                str = str.substring(nIndex);
+                nLen = str.length();
+                for (i = 0; i < nLen; i++){
+                    c = str.charAt(i);
+                    strRes += c;
+                    if (c == ';')
+                        break;
+                }
+                m_strResponseCookies += strRes + " ";
+            }
+        }
 
         return true;
+    }
+
+    public static String fromCharCode(int... codePoints) {
+        return new String(codePoints, 0, codePoints.length);
     }
 
     private String jjdecode(String it){
@@ -302,61 +356,61 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int startpos;
         int endpos;
         String gv;
-        String  gvl;
+        int  gvl;
 
-        if (t.indexOf("\"\'\\\"+\'+\",") == 0) //palindrome check
+        if (t.indexOf("\"\'\\\"+\'+\",") == 0) //palindrome check  - "'\"+'+",
         {
             //locate jjcode
-            startpos	= t.indexOf('$$+"\\""+') + 8;
-            endpos		= t.indexOf('"\\"")())()');
+            startpos	= t.indexOf("$$+\"\\\"\"+") + 8; // $$+"\""+
+            endpos		= t.indexOf("\"\\\"\")())()"); // "\"")())()
 
             //get gv
-            gv	= t.substring((t.indexOf('"\'\\"+\'+",')+9), t.indexOf("=~[]"));
-            gvl	= gv.length;
+            gv	= t.substring((t.indexOf("\"\'\\\"+\'+\",") + 9), t.indexOf("=~[]")); // "'\"+'+",
+            gvl	= gv.length();
         }
         else
         {
             //get gv
-            gv	= t.substr(0, t.indexOf("="));
-            gvl	= gv.length;
+            gv	= t.substring(0, t.indexOf("="));
+            gvl	= gv.length();
 
             //locate jjcode
-            startpos	= t.indexOf('"\\""+') + 5;
-            endpos		= t.indexOf('"\\"")())()');
+            startpos	= t.indexOf("\"\\\"\"+") + 5;  // "\""+
+            endpos		= t.indexOf("\"\\\"\")())()");  // "\"")())()
         }
 
         if (startpos == endpos)
         {
-            alert("No data !");
-            return;
+            messageBox("Увага", "Немає інформації в токені");
+            return "";
         }
 
         //start decoding
-        var data = t.substring(startpos, endpos);
+        String data = t.substring(startpos, endpos);
 
         //hex decode string
-        var b=[ "___+", "__$+", "_$_+", "_$$+", "$__+", "$_$+", "$$_+", "$$$+", "$___+", "$__$+", "$_$_+", "$_$$+", "$$__+", "$$_$+", "$$$_+", "$$$$+" ];
+        String[] b={ "___+", "__$+", "_$_+", "_$$+", "$__+", "$_$+", "$$_+", "$$$+", "$___+", "$__$+", "$_$_+", "$_$$+", "$$__+", "$$_$+", "$$$_+", "$$$$+" };
 
         //lotu
-        var str_l = "(![]+\"\")[" + gv + "._$_]+";
-        var str_o = gv + "._$+";
-        var str_t = gv + ".__+";
-        var str_u = gv + "._+";
+        String str_l = "(![]+\"\")[" + gv + "._$_]+";
+        String str_o = gv + "._$+";
+        String str_t = gv + ".__+";
+        String str_u = gv + "._+";
 
         //0123456789abcdef
-        var str_hex = gv + ".";
+        String str_hex = gv + ".";
 
         //s
-        var str_s = '"';
-        var gvsig = gv + ".";
+        String str_s = "\""; // "
+        String gvsig = gv + ".";
 
-        var str_quote = '\\\\\\"';
-        var str_slash = '\\\\\\\\';
+        String str_quote = "\\\\\\\""; // \\\"
+        String str_slash = "\\\\\\\\";  // \\\\
 
-        var str_lower = "\\\\\"+";
-        var str_upper = "\\\\\"+" + gv + "._+";
+        String str_lower = "\\\\\"+";
+        String str_upper = "\\\\\"+" + gv + "._+";
 
-        var str_end	= '"+'; //end of s loop
+        String str_end	= "\"+"; //end of s loop  "+
 
 
         while(data != "")
@@ -364,25 +418,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             //l o t u
             if (0 == data.indexOf(str_l))
             {
-                data = data.substr(str_l.length);
+                data = data.substring(str_l.length());
                 buffer += "l";
                 continue;
             }
             else if (0 == data.indexOf(str_o))
             {
-                data = data.substr(str_o.length);
+                data = data.substring(str_o.length());
                 buffer += "o";
                 continue;
             }
             else if (0 == data.indexOf(str_t))
             {
-                data = data.substr(str_t.length);
+                data = data.substring(str_t.length());
                 buffer += "t";
                 continue;
             }
             else if (0 == data.indexOf(str_u))
             {
-                data = data.substr(str_u.length);
+                data = data.substring(str_u.length());
                 buffer += "u";
                 continue;
             }
@@ -390,16 +444,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             //0123456789abcdef
             if (0 == data.indexOf(str_hex))
             {
-                data = data.substr(str_hex.length);
+                data = data.substring(str_hex.length());
 
                 //check every element of hex decode string for a match
-                var i = 0;
+                int i = 0;
                 for (i = 0; i < b.length; i++)
                 {
                     if (0 == data.indexOf(b[i]))
                     {
-                        data = data.substr( (b[i]).length );
-                        buffer += i.toString(16);
+                        data = data.substring((b[i]).length());
+                        //buffer +=  i.toString(16);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(Integer.toHexString(i));
+                        buffer += sb.toString();
                         break;
                     }
                 }
@@ -409,27 +466,30 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             //start of s block
             if (0 == data.indexOf(str_s))
             {
-                data = data.substr(str_s.length);
+                data = data.substring(str_s.length());
 
                 //check if "R
                 if (0 == data.indexOf(str_upper)) // r4 n >= 128
                 {
-                    data = data.substr(str_upper.length); //skip sig
+                    data = data.substring(str_upper.length()); //skip sig
 
-                    var ch_str = "";
+                    String ch_str = "";
                     for (j = 0; j < 2; j++) //shouldn't be more than 2 hex chars
                     {
                         //gv + "."+b[ c ]
                         if (0 == data.indexOf(gvsig))
                         {
-                            data = data.substr(gvsig.length); //skip gvsig
+                            data = data.substring(gvsig.length()); //skip gvsig
 
                             for (k = 0; k < b.length; k++)	//for every entry in b
                             {
                                 if (0 == data.indexOf(b[k]))
                                 {
-                                    data = data.substr(b[k].length);
-                                    ch_str += k.toString(16) + "";
+                                    data = data.substring(b[k].length());
+                                    //ch_str += k.toString(16) + "";
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.append(Integer.toHexString(k));
+                                    ch_str += sb.toString() + "";
                                     break;
                                 }
                             }
@@ -440,17 +500,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         }
                     }
 
-                    buffer += String.fromCharCode(parseInt(ch_str,16));
+                    buffer += fromCharCode(java.lang.Integer.parseInt(ch_str,16));
                     continue;
                 }
                 else if (0 == data.indexOf(str_lower)) //r3 check if "R // n < 128
                 {
-                    data = data.substr(str_lower.length); //skip sig
+                    data = data.substring(str_lower.length()); //skip sig
 
-                    var ch_str = "";
-                    var ch_lotux = ""
-                    var temp = "";
-                    var b_checkR1 = 0;
+                    String ch_str = "";
+                    String ch_lotux = "";
+                    String temp = "";
+                    int b_checkR1 = 0;
                     for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
                     {
 
@@ -458,25 +518,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         {
                             if (0 == data.indexOf(str_l))
                             {
-                                data = data.substr(str_l.length);
+                                data = data.substring(str_l.length());
                                 ch_lotux = "l";
                                 break;
                             }
                             else if (0 == data.indexOf(str_o))
                             {
-                                data = data.substr(str_o.length);
+                                data = data.substring(str_o.length());
                                 ch_lotux = "o";
                                 break;
                             }
                             else if (0 == data.indexOf(str_t))
                             {
-                                data = data.substr(str_t.length);
+                                data = data.substring(str_t.length());
                                 ch_lotux = "t";
                                 break;
                             }
                             else if (0 == data.indexOf(str_u))
                             {
-                                data = data.substr(str_u.length);
+                                data = data.substring(str_u.length());
                                 ch_lotux = "u";
                                 break;
                             }
@@ -485,20 +545,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         //gv + "."+b[ c ]
                         if (0 == data.indexOf(gvsig))
                         {
-                            temp = data.substr(gvsig.length);
+                            temp = data.substring(gvsig.length());
                             for (k = 0; k < 8; k++)	//for every entry in b octal
                             {
                                 if (0 == temp.indexOf(b[k]))
                                 {
-                                    if (parseInt(ch_str + k + "",8) > 128)
+                                    if (java.lang.Integer.parseInt(ch_str + k + "", 8) > 128)
                                     {
                                         b_checkR1 = 1;
                                         break;
                                     }
 
                                     ch_str += k + "";
-                                    data = data.substr(gvsig.length); //skip gvsig
-                                    data = data.substr(b[k].length);
+                                    data = data.substring(gvsig.length()); //skip gvsig
+                                    data = data.substring(b[k].length());
                                     break;
                                 }
                             }
@@ -507,16 +567,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             {
                                 if (0 == data.indexOf(str_hex)) //0123456789abcdef
                                 {
-                                    data = data.substr(str_hex.length);
+                                    data = data.substring(str_hex.length());
 
                                     //check every element of hex decode string for a match
-                                    var i = 0;
+                                    int i = 0;
                                     for (i = 0; i < b.length; i++)
                                     {
                                         if (0 == data.indexOf(b[i]))
                                         {
-                                            data = data.substr( (b[i]).length );
-                                            ch_lotux = i.toString(16);
+                                            data = data.substring( (b[i]).length() );
+                                            //ch_lotux = i.toString(16);
+                                            StringBuilder sb = new StringBuilder();
+                                            sb.append(Integer.toHexString(i));
+                                            ch_lotux += sb.toString();
                                             break;
                                         }
                                     }
@@ -531,7 +594,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         }
                     }
 
-                    buffer += String.fromCharCode(parseInt(ch_str,8)) + ch_lotux;
+                    buffer += fromCharCode(java.lang.Integer.parseInt(ch_str, 8)) + ch_lotux;
                     continue; //step out of the while loop
                 }
                 else //"S ----> "SR or "S+
@@ -540,23 +603,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     // if there is, loop s until R 0r +
                     // if there is no matching s block, throw error
 
-                    var match = 0;
-                    var n;
+                    int match = 0;
+                    int n;
 
                     //searching for mathcing pure s block
                     while(true)
                     {
-                        n = data.charCodeAt( 0 );
+                        //n = data.charCodeAt( 0 );
+                        n = data.charAt( 0 );  //alternative - codePointAt() находится в java.lang.String
                         if (0 == data.indexOf(str_quote))
                         {
-                            data = data.substr(str_quote.length);
+                            data = data.substring(str_quote.length());
                             buffer += '"';
                             match += 1;
                             continue;
                         }
                         else if (0 == data.indexOf(str_slash))
                         {
-                            data = data.substr(str_slash.length);
+                            data = data.substring(str_slash.length());
                             buffer += '\\';
                             match += 1;
                             continue;
@@ -565,10 +629,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         {
                             if (match == 0)
                             {
-                                alert("+ no match S block: "+data);
-                                return;
+                                messageBox("Увага", "+ no match S block: "+data);
+                                return "";
                             }
-                            data = data.substr(str_end.length);
+                            data = data.substring(str_end.length());
 
                             break; //step out of the while loop
                         }
@@ -576,14 +640,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         {
                             if (match == 0)
                             {
-                                alert("no match S block n>128: "+data);
-                                return;
+                                messageBox("Увага", "no match S block n>128: "+data);
+                                return "";
                             }
 
-                            data = data.substr(str_upper.length); //skip sig
+                            data = data.substring(str_upper.length()); //skip sig
 
-                            var ch_str = "";
-                            var ch_lotux = "";
+                            String ch_str = "";
+                            String ch_lotux = "";
                             for (j = 0; j < 10; j++) //shouldn't be more than 10 hex chars
                             {
 
@@ -591,25 +655,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 {
                                     if (0 == data.indexOf(str_l))
                                     {
-                                        data = data.substr(str_l.length);
+                                        data = data.substring(str_l.length());
                                         ch_lotux = "l";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_o))
                                     {
-                                        data = data.substr(str_o.length);
+                                        data = data.substring(str_o.length());
                                         ch_lotux = "o";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_t))
                                     {
-                                        data = data.substr(str_t.length);
+                                        data = data.substring(str_t.length());
                                         ch_lotux = "t";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_u))
                                     {
-                                        data = data.substr(str_u.length);
+                                        data = data.substring(str_u.length());
                                         ch_lotux = "u";
                                         break;
                                     }
@@ -618,14 +682,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 //gv + "."+b[ c ]
                                 if (0 == data.indexOf(gvsig))
                                 {
-                                    data = data.substr(gvsig.length); //skip gvsig
+                                    data = data.substring(gvsig.length()); //skip gvsig
 
                                     for (k = 0; k < b.length; k++)	//for every entry in b
                                     {
                                         if (0 == data.indexOf(b[k]))
                                         {
-                                            data = data.substr(b[k].length);
-                                            ch_str += k.toString(16) + "";
+                                            data = data.substring(b[k].length());
+                                            //ch_str += k.toString(16) + "";
+                                            StringBuilder sb = new StringBuilder();
+                                            sb.append(Integer.toHexString(k));
+                                            ch_str += sb.toString() + "";
                                             break;
                                         }
                                     }
@@ -636,23 +703,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 }
                             }
 
-                            buffer += String.fromCharCode(parseInt(ch_str,16));
+                            buffer += fromCharCode(java.lang.Integer.parseInt(ch_str, 16));
                             break; //step out of the while loop
                         }
                         else if (0 == data.indexOf(str_lower)) //r3 check if "R // n < 128
                         {
                             if (match == 0)
                             {
-                                alert("no match S block n<128: "+data);
-                                return;
+                                messageBox("Увага", "no match S block n<128: "+data);
+                                return "";
                             }
 
-                            data = data.substr(str_lower.length); //skip sig
+                            data = data.substring(str_lower.length()); //skip sig
 
-                            var ch_str = "";
-                            var ch_lotux = ""
-                            var temp = "";
-                            var b_checkR1 = 0;
+                            String ch_str = "";
+                            String ch_lotux = "";
+                            String temp = "";
+                            int b_checkR1 = 0;
                             for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
                             {
 
@@ -660,25 +727,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 {
                                     if (0 == data.indexOf(str_l))
                                     {
-                                        data = data.substr(str_l.length);
+                                        data = data.substring(str_l.length());
                                         ch_lotux = "l";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_o))
                                     {
-                                        data = data.substr(str_o.length);
+                                        data = data.substring(str_o.length());
                                         ch_lotux = "o";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_t))
                                     {
-                                        data = data.substr(str_t.length);
+                                        data = data.substring(str_t.length());
                                         ch_lotux = "t";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_u))
                                     {
-                                        data = data.substr(str_u.length);
+                                        data = data.substring(str_u.length());
                                         ch_lotux = "u";
                                         break;
                                     }
@@ -687,20 +754,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 //gv + "."+b[ c ]
                                 if (0 == data.indexOf(gvsig))
                                 {
-                                    temp = data.substr(gvsig.length);
+                                    temp = data.substring(gvsig.length());
                                     for (k = 0; k < 8; k++)	//for every entry in b octal
                                     {
                                         if (0 == temp.indexOf(b[k]))
                                         {
-                                            if (parseInt(ch_str + k + "",8) > 128)
+                                            if (java.lang.Integer.parseInt(ch_str + k + "", 8) > 128)
                                             {
                                                 b_checkR1 = 1;
                                                 break;
                                             }
 
                                             ch_str += k + "";
-                                            data = data.substr(gvsig.length); //skip gvsig
-                                            data = data.substr(b[k].length);
+                                            data = data.substring(gvsig.length()); //skip gvsig
+                                            data = data.substring(b[k].length());
                                             break;
                                         }
                                     }
@@ -709,16 +776,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     {
                                         if (0 == data.indexOf(str_hex)) //0123456789abcdef
                                         {
-                                            data = data.substr(str_hex.length);
+                                            data = data.substring(str_hex.length());
 
                                             //check every element of hex decode string for a match
-                                            var i = 0;
+                                            int i = 0;
                                             for (i = 0; i < b.length; i++)
                                             {
                                                 if (0 == data.indexOf(b[i]))
                                                 {
-                                                    data = data.substr( (b[i]).length );
-                                                    ch_lotux = i.toString(16);
+                                                    data = data.substring( (b[i]).length() );
+                                                    //ch_lotux = i.toString(16);
+                                                    StringBuilder sb = new StringBuilder();
+                                                    sb.append(Integer.toHexString(i));
+                                                    ch_lotux += sb.toString();
                                                     break;
                                                 }
                                             }
@@ -731,13 +801,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 }
                             }
 
-                            buffer += String.fromCharCode(parseInt(ch_str,8)) + ch_lotux;
+                            buffer += fromCharCode(java.lang.Integer.parseInt(ch_str, 8)) + ch_lotux;
                             break; //step out of the while loop
                         }
                         else if( (0x21 <= n && n <= 0x2f) || (0x3A <= n && n <= 0x40) || ( 0x5b <= n && n <= 0x60 ) || ( 0x7b <= n && n <= 0x7f ) )
                         {
                             buffer += data.charAt( 0 );
-                            data = data.substr( 1 );
+                            data = data.substring(1);
                             match += 1;
                         }
 
@@ -746,12 +816,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
             }
 
-            alert("no match : "+data);
+         //   messageBox("Увага", "no match : "+data);
             break;
         }
-
-        return buffer.toString();
-
 
         return buffer;
     }
@@ -1088,24 +1155,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         //Trains;
         while(true){
-            String strTrainNumber = "";
-            String strTrainDeparture = "";
+            String strTrainNumber;
+            String strTrainDeparture;
             String strTrainDestination = "";
-            String strTrainDep = "";
-            String strTrainDuration = "";
-            String strTrainArrive = "";
-            String strTrainLuxPrice = "";
-            String strTrainLuxSeat = "";
-            String strTrainCompartmentFirmPrice = "";
-            String strTrainCompartmentFirmSeat = "";
-            String strTrainCompartmentPrice = "";
-            String strTrainCompartmentSeat = "";
-            String strTrainThirdClassFirmPrice = "";
-            String strTrainThirdClassFirmSeat = "";
-            String strTrainThirdClassPrice = "";
-            String strTrainThirdClassSeat = "";
-            String strTrainSeatsPrice = "";
-            String strTrainSeatsSeat = "";
+            String strTrainDep;
+            String strTrainDuration;
+            String strTrainArrive;
+            String strTrainLuxPrice;
+            String strTrainLuxSeat;
+            String strTrainCompartmentFirmPrice;
+            String strTrainCompartmentFirmSeat;
+            String strTrainCompartmentPrice;
+            String strTrainCompartmentSeat;
+            String strTrainThirdClassFirmPrice;
+            String strTrainThirdClassFirmSeat;
+            String strTrainThirdClassPrice;
+            String strTrainThirdClassSeat;
+            String strTrainSeatsPrice;
+            String strTrainSeatsSeat;
 
             ParserParameter par = new ParserParameter();
 
