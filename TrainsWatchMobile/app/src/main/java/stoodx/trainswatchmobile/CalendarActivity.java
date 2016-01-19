@@ -24,7 +24,7 @@ public class CalendarActivity extends Activity {
         final CalendarView calendarView = (CalendarView)findViewById(R.id.calendarView);
         final Calendar calendar = Calendar.getInstance();
 
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd");
+        final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
         m_strSelectedDate = sdf.format(new Date(calendarView.getDate()));
         calendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener(){
             @Override

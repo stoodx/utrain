@@ -53,20 +53,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private List<Station> m_arrayStationsFrom;
     private List<Station> m_arrayStationsTo;
 
+    private int m_nVisitBooking;
+    private int[] m_nIDSpinner;
+
     private Spinner m_spinnerFromA;
     private Spinner m_spinnerToA;
     private Spinner m_spinnerFrom;
     private Spinner m_spinnerTo;
-    private int[] m_nIDSpinner;
     private String m_strCalendar;
     private String m_strToken;
     private String m_strResponseCookies;
+    private  String m_strTimeFirstVisit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        m_nVisitBooking = 0;
         m_nIDSpinner = new int[4];
         m_nIDSpinner[0] = 0;
         m_nIDSpinner[1] = 0;
@@ -79,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_strCalendar = "";
         m_strToken = "";
         m_strResponseCookies = "";
+        m_strTimeFirstVisit = Integer.toString((int) (System.currentTimeMillis() / 1000L));
 
         //From
         m_spinnerFromA = (Spinner) findViewById(R.id.spinnerFromA);
@@ -181,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         AsyncHttpClient client = new AsyncHttpClient();
         client.setMaxRetriesAndTimeout(10, 10000);
+
         client.get(strURL, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
@@ -1010,9 +1016,59 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+    private String createUTMCokies(){
+        String strCookies = " __utma=";
+
+        //hash domain
+        String strDomain = "kvy.com.ua";
+        int nHash = strToUTF16(strDomain).hashCode();
+        String strHashDomain = Integer.toString(nHash);
+
+        //current  time
+        String strTimeCurrentVisit = Integer.toString((int) (System.currentTimeMillis() / 1000L));
+
+        //utma
+        strCookies += strHashDomain;
+        strCookies += '.';
+        strCookies += Integer.toString(21589326); //ID user in Google Analistics
+        strCookies += '.';
+        strCookies += m_strTimeFirstVisit; //first visit
+        strCookies += '.';
+        strCookies += m_strTimeFirstVisit;//prev. visit
+        strCookies += '.';
+        strCookies += strTimeCurrentVisit;//curr. visit
+        strCookies += '.';
+        strCookies += Integer.toString(m_nVisitBooking++);
+        strCookies += "; __utmb=";
+
+        //utmb
+        strCookies += strHashDomain;
+        strCookies += ".2.10.";
+        strCookies += strTimeCurrentVisit;//curr. visit
+        strCookies += "; __utmc=";
+
+        //utmc
+        strCookies += strHashDomain;
+        strCookies += "; __utmt=1; __utmz=";
+
+        //utmz
+        strCookies += strHashDomain;
+        strCookies += '.';
+        strCookies += strTimeCurrentVisit;//curr. visit
+        strCookies += ".1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none);";
+
+        return strCookies;
+    }
+
     public void onClickRequest(View view) {
         if (m_strCalendar.length() == 0){
             messageBox("Увага", "Вам необхідно вибрати дату відправки. Для цього натисніть на кнопку Коли.");
+            return;
+        }
+
+        if (m_strToken.length() == 0){
+            messageBox("Увага", "Немає токена, спробуйте ще раз.");
+            SendRequestForToken();
             return;
         }
 
@@ -1022,7 +1078,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Station stationFrom = m_arrayStationsFrom.get(nPosFrom);
         Station stationTo = m_arrayStationsTo.get(nPosTo);
 
+        String strURL = "http://booking.uz.gov.ua/ru/purchase/search/";
+        String strPost = "station_id_from=" + stationFrom.m_strID +
+                "&station_id_till=" + stationTo.m_strID +
+                "&station_from=" + stationFrom.m_strName +
+                "&station_till=" + stationTo.m_strName +
+                "&date_dep=" + m_strCalendar +
+                "&time_dep=00%%3A00&time_dep_till=&another_ec=0&search=";
 
+        String strHeaders = "";
+
+        strHeaders += createUTMCokies();
+/*
         String strURL = "http://dprc.gov.ua/show.php?transport_type=2&src=" +
                stationFrom.m_strID +
                 "&dst=" +
@@ -1031,7 +1098,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 m_strCalendar +
                 "&ret_dt=2001-01-01&ps=ec_privat&set_language=1";
 
-        sendHTTPRequest(strURL, -1);
+        sendHTTPRequest(strURL, -1);*/
     }
 
     private void responseRequest(String strResponse){
