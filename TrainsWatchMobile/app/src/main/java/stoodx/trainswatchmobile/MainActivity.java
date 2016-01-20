@@ -30,6 +30,7 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -161,16 +162,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //            spinnerA.getItemAtPosition(pos);
         String strURL = "http://booking.uz.gov.ua/purchase/station/" +
                 spinnerA.getItemAtPosition(pos);
-        sendHTTPRequest(strURL, spinnerA.getId());
+        sendHTTPRequest(strURL, spinnerA.getId(), null, null);
         return true;
     }
 
     private void SendRequestForToken(){
-        sendHTTPRequest("http://booking.uz.gov.ua", -2);
+
+        sendHTTPRequest("http://booking.uz.gov.ua", -2, null, null);
     }
 
 
-    private void sendHTTPRequest(String strURL, int id){
+    private void sendHTTPRequest(String strURL, int id,
+                                 HashMap<String, String> paramHeader,
+                                 RequestParams paramPost) {
         int i;
         synchronized (m_nIDSpinner) {
             for (i = 0; i < 4; i++) {
@@ -187,24 +191,53 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         AsyncHttpClient client = new AsyncHttpClient();
         client.setMaxRetriesAndTimeout(10, 10000);
 
-        client.get(strURL, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                // called when response HTTP status is "200 OK"
-                try {
-                    String strResponse = String.valueOf(new String(response, "UTF-8"));
-                    handleResponse(strResponse, headers);
-                } catch (UnsupportedEncodingException e) {
-                    messageBox("Увага", "Exception: " + e.getMessage());
-                }
+        if (paramHeader != null){
+            Iterator<String> keySetIterator = paramHeader.keySet().iterator();
+            while(keySetIterator.hasNext()){
+                String key = keySetIterator.next();
+                client.addHeader(key, paramHeader.get(key));
             }
+        }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-                messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
-            }
-        });
+        if (paramPost == null) {
+            client.get(strURL, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                    // called when response HTTP status is "200 OK"
+                    try {
+                        String strResponse = String.valueOf(new String(response, "UTF-8"));
+                        handleResponse(strResponse, headers);
+                    } catch (UnsupportedEncodingException e) {
+                        messageBox("Увага", "Exception: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                    // called when response HTTP status is "4XX" (eg. 401, 403, 404)
+                    messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
+                }
+            });
+        } else {
+            client.post(strURL, paramPost, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                    // called when response HTTP status is "200 OK"
+                    try {
+                        String strResponse = String.valueOf(new String(response, "UTF-8"));
+                        handleResponse(strResponse, headers);
+                    } catch (UnsupportedEncodingException e) {
+                        messageBox("Увага", "Exception: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                    // called when response HTTP status is "4XX" (eg. 401, 403, 404)
+                    messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
+                }
+            });
+        }
     }
 
 /*
@@ -1078,17 +1111,36 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Station stationFrom = m_arrayStationsFrom.get(nPosFrom);
         Station stationTo = m_arrayStationsTo.get(nPosTo);
 
-        String strURL = "http://booking.uz.gov.ua/ru/purchase/search/";
-        String strPost = "station_id_from=" + stationFrom.m_strID +
-                "&station_id_till=" + stationTo.m_strID +
-                "&station_from=" + stationFrom.m_strName +
-                "&station_till=" + stationTo.m_strName +
-                "&date_dep=" + m_strCalendar +
-                "&time_dep=00%%3A00&time_dep_till=&another_ec=0&search=";
+        String strURL = "http://booking.uz.gov.ua/purchase/search/";
 
-        String strHeaders = "";
+        RequestParams paramPost = new RequestParams();
+        paramPost.put("station_id_from", stationFrom.m_strID);
+        paramPost.put("station_id_till", stationTo.m_strID);
+        paramPost.put("station_from", stationFrom.m_strName);
+        paramPost.put("station_till", stationTo.m_strName);
+        paramPost.put("date_dep", m_strCalendar);
+        paramPost.put("time_dep", "00%%3A00");
+        paramPost.put("time_dep_till", "");
+        paramPost.put("another_ec", "0");
+        paramPost.put("search", "");
 
-        strHeaders += createUTMCokies();
+        HashMap<String, String> paramHeader = new HashMap<String, String>();
+        paramHeader.put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        paramHeader.put("GV-Token", m_strToken);
+        paramHeader.put("GV-Unique-Host", "1");
+        paramHeader.put("GV-Ajax", "1");
+        paramHeader.put("GV-Screen","1920x1080");
+        paramHeader.put("GV-Referer", "http://booking.uz.gov.ua/ru/");
+        paramHeader.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        paramHeader.put("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
+        paramHeader.put("Accept-Encoding", "gzip, deflate");
+        paramHeader.put("User-Agent", "HTTPClient");
+        paramHeader.put("Referer", "http://booking.uz.gov.ua/");
+        paramHeader.put("Cookie", m_strResponseCookies + createUTMCokies());
+        paramHeader.put("Connection", "keep-alive");
+
+        sendHTTPRequest(strURL, -1, paramHeader, paramPost);
+
 /*
         String strURL = "http://dprc.gov.ua/show.php?transport_type=2&src=" +
                stationFrom.m_strID +
@@ -1102,7 +1154,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void responseRequest(String strResponse){
-         messageBox("Iнформація", parser(strResponse));
+         //messageBox("Iнформація", parser(strResponse));
+        messageBox("Iнформація", printUTF8Converter(strResponse));
     }
 
     final private static String CR = "\n";
