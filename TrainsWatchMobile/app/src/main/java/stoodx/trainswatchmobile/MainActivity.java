@@ -10,19 +10,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-import com.android.volley.Cache;
-import com.android.volley.Network;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
-import com.android.volley.toolbox.HurlStack;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-
 import com.loopj.android.http.*;
 
 import java.io.IOException;
@@ -32,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import cz.msebera.android.httpclient.Header;
@@ -240,39 +226,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-/*
-    private void sendHTTPRequest(String strURL, int id) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        // Request a string response from the provided URL.
-        int i;
-        synchronized (m_nIDSpinner) {
-            for (i = 0; i < 4; i++) {
-                if (m_nIDSpinner[i] == 0) {
-                    m_nIDSpinner[i] = id;
-                    break;
-                }
-            }
-        }
-        if (id == 4){
-            messageBox("Увага", "Перевищено поріг запитів до сайту");
-            return;
-        }
-        StringRequest stringRequest = new StringRequest(Request.Method.GET,  strURL,
-               new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String strResponse) {
-                        handleResponse(strResponse);
-                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                messageBox("Увага", "Помилка з сайту: " +  error.getMessage());
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-    }
-*/
+
     private void handleResponse(String strResponse, Header[] headers){
         int id = 0;
         int i;
