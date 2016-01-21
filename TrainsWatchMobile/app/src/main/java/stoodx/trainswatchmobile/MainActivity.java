@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         adapterFrom.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinnerTo.setAdapter(adapterTo);
 
-        SendRequestForToken();
+        sendRequestForToken();
     }
 
     public void onItemSelected(AdapterView<?> parent, View view,
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
-    private void SendRequestForToken(){
+    private void sendRequestForToken(){
 
         sendHTTPRequest("http://booking.uz.gov.ua", -2, null, null);
     }
@@ -1101,7 +1101,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         if (m_strToken.length() == 0){
             messageBox("Увага", "Немає токена, спробуйте ще раз.");
-            SendRequestForToken();
+            sendRequestForToken();
             return;
         }
 
@@ -1119,7 +1119,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         paramPost.put("station_from", stationFrom.m_strName);
         paramPost.put("station_till", stationTo.m_strName);
         paramPost.put("date_dep", m_strCalendar);
-        paramPost.put("time_dep", "00%%3A00");
+        paramPost.put("time_dep", "00:00");
         paramPost.put("time_dep_till", "");
         paramPost.put("another_ec", "0");
         paramPost.put("search", "");
@@ -1130,9 +1130,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         paramHeader.put("GV-Unique-Host", "1");
         paramHeader.put("GV-Ajax", "1");
         paramHeader.put("GV-Screen","1920x1080");
-        paramHeader.put("GV-Referer", "http://booking.uz.gov.ua/ru/");
+        paramHeader.put("GV-Referer", "http://booking.uz.gov.ua/");
         paramHeader.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-        paramHeader.put("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2");
+        paramHeader.put("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
         paramHeader.put("Accept-Encoding", "gzip, deflate");
         paramHeader.put("User-Agent", "HTTPClient");
         paramHeader.put("Referer", "http://booking.uz.gov.ua/");
@@ -1156,6 +1156,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void responseRequest(String strResponse){
          //messageBox("Iнформація", parser(strResponse));
         messageBox("Iнформація", printUTF8Converter(strResponse));
+        sendRequestForToken();
     }
 
     final private static String CR = "\n";
