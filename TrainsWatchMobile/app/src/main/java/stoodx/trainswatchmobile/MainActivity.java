@@ -869,6 +869,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 strID += c;
             }
 
+            int nId = Integer.parseInt(strID);
+            if (nId < 2200000 || nId > 2299999) //only ukraine
+                continue;
+
             Station station = new Station();
             station.m_strID = strID;
             station.m_strName = printUTF8Converter(strName);
