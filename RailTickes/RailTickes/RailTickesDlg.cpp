@@ -345,6 +345,10 @@ bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStat
 				break;
 			strID += c;
 		}
+		int nId = std::stoi(strID);
+		if (nId < 2200000 || nId > 2299999)
+			continue; //only Ukraine
+
 		Station* pStation = NULL; 
 		pStation =  new Station;
 		ASSERT(pStation);
