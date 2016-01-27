@@ -8,7 +8,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.loopj.android.http.*;
 
@@ -52,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private String m_strResponseCookies;
     private  String m_strTimeFirstVisit;
 
+    private boolean m_bWatchDirection;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_strToken = "";
         m_strResponseCookies = "";
         m_strTimeFirstVisit = Integer.toString((int) (System.currentTimeMillis() / 1000L));
+
+        m_bWatchDirection = false;
 
         //From
         m_spinnerFromA = (Spinner) findViewById(R.id.spinnerFromA);
@@ -101,6 +107,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 android.R.layout.simple_spinner_item, listTo);
         adapterFrom.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinnerTo.setAdapter(adapterTo);
+
+        TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+        tillWatchRequest.setVisibility(View.GONE);
 
         sendRequestForToken();
     }
@@ -1526,4 +1535,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         par.str3 = strSeats;
         return bResult;
     }
+
+    public void onClickWatch(View view) {
+        Button buttonWatch = (Button)findViewById(R.id.buttonWatch);
+        TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+        if (m_bWatchDirection){
+            // stop watch direction
+
+            tillWatchRequest.setVisibility(View.GONE);
+            buttonWatch.setText(R.string.buttonWatch);
+            m_bWatchDirection = false;
+        } else {
+            // start watch direction
+
+
+            tillWatchRequest.setVisibility(View.VISIBLE);
+            buttonWatch.setText(R.string.buttonWatch2);
+            m_bWatchDirection = true;
+        }
+
+    }
+
 }

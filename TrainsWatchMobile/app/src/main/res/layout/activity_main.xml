@@ -84,4 +84,26 @@
         android:layout_centerHorizontal="true"
         android:onClick="onClickRequest" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/buttonWatch"
+        android:id="@+id/buttonWatch"
+        android:textAllCaps="false"
+        android:onClick="onClickWatch"
+        android:layout_below="@+id/buttonRequest"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/textViewTillWatchRequest"
+        android:id="@+id/textViewTillWatchRequest"
+        android:layout_below="@+id/buttonWatch"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:background="#979797" />
+
 </RelativeLayout>

@@ -72,4 +72,7 @@
     <string name="calendar_name">Виберіть дату відправки</string>
     <string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string>
     <string name="buttonReturnToMainWindow">До Главного Вікна</string>
+    <string name="buttonWatch">Відстежити напрямок</string>
+    <string name="buttonWatch2">Зупинити відстеження</string>
+    <string name="textViewTillWatchRequest">До запиту(сек): </string>
 </resources>
