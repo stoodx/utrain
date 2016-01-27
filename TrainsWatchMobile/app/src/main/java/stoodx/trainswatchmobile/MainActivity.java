@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_nIDSpinner[2] = 0;
         m_nIDSpinner[3] = 0;
 
-        m_arrayStationsFrom = new ArrayList<Station>();
-        m_arrayStationsTo = new ArrayList<Station>();
+        m_arrayStationsFrom = new ArrayList<>();
+        m_arrayStationsTo = new ArrayList<>();
 
         m_strCalendar = "";
         m_strToken = "";
@@ -81,9 +81,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_spinnerFromA.setAdapter(adapterFromA);
 
         m_spinnerFrom = (Spinner) findViewById(R.id.spinnerFrom);
-        List<String> listFrom = new ArrayList<String>();
-        ArrayAdapter<String> adapterFrom = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item,  listFrom);
+        List<String> listFrom = new ArrayList<>();
+        ArrayAdapter<String> adapterFrom = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, listFrom);
         adapterFrom.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinnerFrom.setAdapter(adapterFrom);
 
@@ -96,9 +96,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         m_spinnerToA.setAdapter(adapterToA);
 
         m_spinnerTo = (Spinner) findViewById(R.id.spinnerTo);
-        List<String> listTo = new ArrayList<String>();
-        ArrayAdapter<String> adapterTo = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item,  listTo);
+        List<String> listTo = new ArrayList<>();
+        ArrayAdapter<String> adapterTo = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, listTo);
         adapterFrom.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinnerTo.setAdapter(adapterTo);
 
@@ -118,8 +118,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case R.id.spinnerToA:
                 sendStationsFilling(m_spinnerToA, pos);
                 break;
-            default:
-                return;
         }
     }
 
