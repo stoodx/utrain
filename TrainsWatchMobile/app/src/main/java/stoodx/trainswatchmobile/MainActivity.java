@@ -19,7 +19,7 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+//import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -169,12 +169,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                  HashMap<String, String> paramHeader,
                                  RequestParams paramPost) {
         int i;
-        synchronized (m_nIDSpinner) {
-            for (i = 0; i < 4; i++) {
-                if (m_nIDSpinner[i] == 0) {
-                    m_nIDSpinner[i] = id;
-                    break;
-                }
+        for (i = 0; i < 4; i++) {
+            if (m_nIDSpinner[i] == 0) {
+                m_nIDSpinner[i] = id;
+                break;
             }
         }
         if (id == 4){
@@ -185,9 +183,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         client.setMaxRetriesAndTimeout(10, 10000);
 
         if (paramHeader != null){
-            Iterator<String> keySetIterator = paramHeader.keySet().iterator();
-            while(keySetIterator.hasNext()){
-                String key = keySetIterator.next();
+            for (String key : paramHeader.keySet()) {
                 client.addHeader(key, paramHeader.get(key));
             }
         }
@@ -237,13 +233,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void handleResponse(String strResponse, Header[] headers){
         int id = 0;
         int i;
-        synchronized (m_nIDSpinner) {
-            for (i = 0; i < 4; i++) {
-                if (m_nIDSpinner[i] != 0) {
-                    id = m_nIDSpinner[i];
-                    m_nIDSpinner[i] = 0;
-                    break;
-                }
+
+        for (i = 0; i < 4; i++) {
+            if (m_nIDSpinner[i] != 0) {
+                id = m_nIDSpinner[i];
+                m_nIDSpinner[i] = 0;
+                break;
             }
         }
         if (i == 4){
