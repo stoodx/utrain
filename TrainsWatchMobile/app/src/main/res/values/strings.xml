@@ -74,5 +74,5 @@
     <string name="buttonReturnToMainWindow">До Главного Вікна</string>
     <string name="buttonWatch">Відстежити напрямок</string>
     <string name="buttonWatch2">Зупинити відстеження</string>
-    <string name="textViewTillWatchRequest">До запиту(сек): </string>
+    <string name="textViewTillWatchRequest">До запиту: </string>
 </resources>

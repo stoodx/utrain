@@ -3,6 +3,7 @@ package stoodx.trainswatchmobile;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,7 +20,6 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -38,6 +38,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public String str2;
         public String str3;
     }
+
+    public class MyTimer extends CountDownTimer {
+        public MyTimer(long millisInFuture, long countDownInterval)
+        {
+            super(millisInFuture, countDownInterval);
+        }
+
+        @Override
+        public void onFinish()
+        {
+            messageBox("Увага", "таймер");
+        }
+
+        public void onTick(long millisUntilFinished)
+        {
+            TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+            String strText = getString(R.string.textViewTillWatchRequest);
+            strText += " " +  Long.toString(millisUntilFinished / 1000) +  " сек";
+            tillWatchRequest.setText(strText);
+        }
+    }
+
+    private MyTimer m_mytimer;
 
     private List<Station> m_arrayStationsFrom;
     private List<Station> m_arrayStationsTo;
@@ -1531,22 +1554,45 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return bResult;
     }
 
+
     public void onClickWatch(View view) {
         Button buttonWatch = (Button)findViewById(R.id.buttonWatch);
+        Button buttonRequest = (Button)findViewById(R.id.buttonRequest);
+        Button buttonDate = (Button)findViewById(R.id.buttonDate);
         TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+        if (m_mytimer != null){
+            m_mytimer.cancel();
+        }
         if (m_bWatchDirection){
             // stop watch direction
 
+            m_spinnerFromA.setEnabled(true);
+            m_spinnerToA.setEnabled(true);
+            m_spinnerFrom.setEnabled(true);
+            m_spinnerTo.setEnabled(true);
             tillWatchRequest.setVisibility(View.GONE);
+            buttonRequest.setVisibility(View.VISIBLE);
+            buttonDate.setVisibility(View.VISIBLE);
             buttonWatch.setText(R.string.buttonWatch);
             m_bWatchDirection = false;
         } else {
             // start watch direction
+            if (m_strCalendar.length() == 0){
+                messageBox("Увага", "Вам необхідно вибрати дату відправки. Для цього натисніть на кнопку Коли.");
+                return;
+            }
 
-
+            m_spinnerFromA.setEnabled(false);
+            m_spinnerToA.setEnabled(false);
+            m_spinnerFrom.setEnabled(false);
+            m_spinnerTo.setEnabled(false);
             tillWatchRequest.setVisibility(View.VISIBLE);
             buttonWatch.setText(R.string.buttonWatch2);
+            buttonRequest.setVisibility(View.GONE);
+            buttonDate.setVisibility(View.GONE);
             m_bWatchDirection = true;
+            m_mytimer = new MyTimer(300000, 1000);
+            m_mytimer.start();
         }
 
     }

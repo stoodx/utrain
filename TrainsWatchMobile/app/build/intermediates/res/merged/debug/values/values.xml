@@ -305,7 +305,7 @@
     <eat-comment/>
     <string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string>
     <string name="textViewFrom">Звідки:</string>
-    <string name="textViewTillWatchRequest">До запиту(сек): </string>
+    <string name="textViewTillWatchRequest">До запиту: </string>
     <string name="textViewTo">Куди:</string>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.1/res/values/values.xml -->
     <eat-comment/>

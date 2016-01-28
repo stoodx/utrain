@@ -1379,7 +1379,7 @@
         <item>Щ</item>
         <item>Ю</item>
         <item>Я</item>
-    </string-array><string name="textViewTillWatchRequest">До запиту(сек): </string><string name="app_name">Напрямок поїздів</string><string name="textViewFrom">Звідки:</string><string-array name="spinnerToA">
+    </string-array><string name="textViewTillWatchRequest">До запиту: </string><string name="app_name">Напрямок поїздів</string><string name="textViewFrom">Звідки:</string><string-array name="spinnerToA">
         <item>А</item>
         <item>Б</item>
         <item>В</item>
