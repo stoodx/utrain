@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
                     // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-                    messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
+                    messageBox("Увага", "Помилка з сайту: " + e.getMessage());
                 }
             });
         } else {
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
                     // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-                    messageBox("Увага", "Помилка з сайту: " + errorResponse.toString());
+                    messageBox("Увага", "Помилка з сайту: " + e.getMessage());
                 }
             });
         }
@@ -374,7 +374,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int startpos;
         int endpos;
         String gv;
-        int  gvl;
+        //int  gvl;
 
         if (t.indexOf("\"\'\\\"+\'+\",") == 0) //palindrome check  - "'\"+'+",
         {
@@ -384,13 +384,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             //get gv
             gv	= t.substring((t.indexOf("\"\'\\\"+\'+\",") + 9), t.indexOf("=~[]")); // "'\"+'+",
-            gvl	= gv.length();
+   //         gvl	= gv.length();
         }
         else
         {
             //get gv
             gv	= t.substring(0, t.indexOf("="));
-            gvl	= gv.length();
+     //       gvl	= gv.length();
 
             //locate jjcode
             startpos	= t.indexOf("\"\\\"\"+") + 5;  // "\""+
