@@ -3,6 +3,8 @@ package stoodx.trainswatchmobile;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -48,7 +50,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onFinish()
         {
-            messageBox("Увага", "таймер");
+            TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+            tillWatchRequest.setText("Запит");
+            sendWatchRequest();
         }
 
         public void onTick(long millisUntilFinished)
@@ -85,11 +89,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         setContentView(R.layout.activity_main);
 
         m_nVisitBooking = 0;
-        m_nIDSpinner = new int[4];
+        m_nIDSpinner = new int[5];
         m_nIDSpinner[0] = 0;
         m_nIDSpinner[1] = 0;
         m_nIDSpinner[2] = 0;
         m_nIDSpinner[3] = 0;
+        m_nIDSpinner[4] = 0;
 
         m_arrayStationsFrom = new ArrayList<>();
         m_arrayStationsTo = new ArrayList<>();
@@ -192,13 +197,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                  HashMap<String, String> paramHeader,
                                  RequestParams paramPost) {
         int i;
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 5; i++) {
             if (m_nIDSpinner[i] == 0) {
                 m_nIDSpinner[i] = id;
                 break;
             }
         }
-        if (id == 4){
+        if (id == 5){
             messageBox("Увага", "Перевищено поріг запитів до сайту");
             return;
         }
@@ -257,14 +262,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int id = 0;
         int i;
 
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 5; i++) {
             if (m_nIDSpinner[i] != 0) {
                 id = m_nIDSpinner[i];
                 m_nIDSpinner[i] = 0;
                 break;
             }
         }
-        if (i == 4){
+        if (i == 5){
             return;
         }
         switch (id) {
@@ -277,8 +282,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case -1: //request
                 responseRequest(strResponse);
                 break;
-            case -2:
+            case -2: //token
                 responseToken(strResponse, headers);
+                break;
+            case -3: //watch
+                responseWatchRequest(strResponse);
                 break;
             default:
                 break;
@@ -1137,9 +1145,37 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void responseRequest(String strResponse){
-         //messageBox("Iнформація", parser(strResponse));
         messageBox("Iнформація", printUTF8Converter(strResponse));
         sendRequestForToken();
+    }
+
+    private void responseWatchRequest(String strResponse){
+        int nIndex = 0;
+        String str =  printUTF8Converter(strResponse);
+        nIndex = strResponse.indexOf("\"error\":true");
+        if (nIndex == -1) {
+            //have info
+            beep();
+            messageBox("Iнформація",str);
+        }else {
+            //no info
+            nIndex = str.indexOf("По заданому Вами напрямку місць немає");
+            if (nIndex == -1){
+                //error
+                beep();
+                messageBox("Увага", str);
+            } else {
+                //no seates
+                m_bWatchDirection = false;
+            }
+        }
+        onClickWatch(null);
+        sendRequestForToken();
+    }
+
+    private void beep(){
+        ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+        toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
     }
 
     final private static String CR = "\n";
@@ -1560,6 +1596,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Button buttonRequest = (Button)findViewById(R.id.buttonRequest);
         Button buttonDate = (Button)findViewById(R.id.buttonDate);
         TextView tillWatchRequest = (TextView) findViewById(R.id.textViewTillWatchRequest);
+        if (m_strToken.length() == 0){
+            sendRequestForToken();
+            return;
+        }
         if (m_mytimer != null){
             m_mytimer.cancel();
         }
@@ -1597,4 +1637,41 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
+    private void sendWatchRequest(){
+        int nPosFrom = m_spinnerFrom.getSelectedItemPosition();
+        int nPosTo = m_spinnerTo.getSelectedItemPosition();
+
+        Station stationFrom = m_arrayStationsFrom.get(nPosFrom);
+        Station stationTo = m_arrayStationsTo.get(nPosTo);
+
+        String strURL = "http://booking.uz.gov.ua/purchase/search/";
+
+        RequestParams paramPost = new RequestParams();
+        paramPost.put("station_id_from", stationFrom.m_strID);
+        paramPost.put("station_id_till", stationTo.m_strID);
+        paramPost.put("station_from", stationFrom.m_strName);
+        paramPost.put("station_till", stationTo.m_strName);
+        paramPost.put("date_dep", m_strCalendar);
+        paramPost.put("time_dep", "00:00");
+        paramPost.put("time_dep_till", "");
+        paramPost.put("another_ec", "0");
+        paramPost.put("search", "");
+
+        HashMap<String, String> paramHeader = new HashMap<String, String>();
+        paramHeader.put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        paramHeader.put("GV-Token", m_strToken);
+        paramHeader.put("GV-Unique-Host", "1");
+        paramHeader.put("GV-Ajax", "1");
+        paramHeader.put("GV-Screen","1920x1080");
+        paramHeader.put("GV-Referer", "http://booking.uz.gov.ua/");
+        paramHeader.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        paramHeader.put("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
+        paramHeader.put("Accept-Encoding", "gzip, deflate");
+        paramHeader.put("User-Agent", "HTTPClient");
+        paramHeader.put("Referer", "http://booking.uz.gov.ua/");
+        paramHeader.put("Cookie", m_strResponseCookies + createUTMCokies());
+        paramHeader.put("Connection", "keep-alive");
+
+        sendHTTPRequest(strURL, -3, paramHeader, paramPost);
+    }
 }
