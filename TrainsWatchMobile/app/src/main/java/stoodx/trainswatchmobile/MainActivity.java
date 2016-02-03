@@ -439,7 +439,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String str_end	= "\"+"; //end of s loop  "+
 
 
-        while(data != "")
+        while(!data.equals(""))
         {
             //l o t u
             if (0 == data.indexOf(str_l))
@@ -473,16 +473,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 data = data.substring(str_hex.length());
 
                 //check every element of hex decode string for a match
-                int i = 0;
+                int i;
                 for (i = 0; i < b.length; i++)
                 {
                     if (0 == data.indexOf(b[i]))
                     {
                         data = data.substring((b[i]).length());
                         //buffer +=  i.toString(16);
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(Integer.toHexString(i));
-                        buffer += sb.toString();
+                        buffer += Integer.toHexString(i);
                         break;
                     }
                 }
@@ -513,9 +511,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 {
                                     data = data.substring(b[k].length());
                                     //ch_str += k.toString(16) + "";
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append(Integer.toHexString(k));
-                                    ch_str += sb.toString() + "";
+                                    ch_str += Integer.toHexString(k) + "";
                                     break;
                                 }
                             }
@@ -535,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                     String ch_str = "";
                     String ch_lotux = "";
-                    String temp = "";
+                    String temp;
                     int b_checkR1 = 0;
                     for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
                     {
@@ -596,16 +592,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     data = data.substring(str_hex.length());
 
                                     //check every element of hex decode string for a match
-                                    int i = 0;
+                                    int i;
                                     for (i = 0; i < b.length; i++)
                                     {
                                         if (0 == data.indexOf(b[i]))
                                         {
                                             data = data.substring( (b[i]).length() );
                                             //ch_lotux = i.toString(16);
-                                            StringBuilder sb = new StringBuilder();
-                                            sb.append(Integer.toHexString(i));
-                                            ch_lotux += sb.toString();
+                                            ch_lotux += Integer.toHexString(i);
                                             break;
                                         }
                                     }
@@ -642,14 +636,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             data = data.substring(str_quote.length());
                             buffer += '"';
                             match += 1;
-                            continue;
                         }
                         else if (0 == data.indexOf(str_slash))
                         {
                             data = data.substring(str_slash.length());
                             buffer += '\\';
                             match += 1;
-                            continue;
                         }
                         else if (0 == data.indexOf(str_end))	//reached end off S block ? +
                         {
@@ -673,7 +665,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             data = data.substring(str_upper.length()); //skip sig
 
                             String ch_str = "";
-                            String ch_lotux = "";
+                //            String ch_lotux = "";
                             for (j = 0; j < 10; j++) //shouldn't be more than 10 hex chars
                             {
 
@@ -682,25 +674,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     if (0 == data.indexOf(str_l))
                                     {
                                         data = data.substring(str_l.length());
-                                        ch_lotux = "l";
+                //                        ch_lotux = "l";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_o))
                                     {
                                         data = data.substring(str_o.length());
-                                        ch_lotux = "o";
+                //                        ch_lotux = "o";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_t))
                                     {
                                         data = data.substring(str_t.length());
-                                        ch_lotux = "t";
+                //                       ch_lotux = "t";
                                         break;
                                     }
                                     else if (0 == data.indexOf(str_u))
                                     {
                                         data = data.substring(str_u.length());
-                                        ch_lotux = "u";
+                //                        ch_lotux = "u";
                                         break;
                                     }
                                 }
@@ -716,9 +708,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         {
                                             data = data.substring(b[k].length());
                                             //ch_str += k.toString(16) + "";
-                                            StringBuilder sb = new StringBuilder();
-                                            sb.append(Integer.toHexString(k));
-                                            ch_str += sb.toString() + "";
+                                            ch_str += Integer.toHexString(k) + "";
                                             break;
                                         }
                                     }
@@ -744,7 +734,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                             String ch_str = "";
                             String ch_lotux = "";
-                            String temp = "";
+                            String temp;
                             int b_checkR1 = 0;
                             for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
                             {
@@ -805,16 +795,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                             data = data.substring(str_hex.length());
 
                                             //check every element of hex decode string for a match
-                                            int i = 0;
+                                            int i;
                                             for (i = 0; i < b.length; i++)
                                             {
                                                 if (0 == data.indexOf(b[i]))
                                                 {
                                                     data = data.substring( (b[i]).length() );
                                                     //ch_lotux = i.toString(16);
-                                                    StringBuilder sb = new StringBuilder();
-                                                    sb.append(Integer.toHexString(i));
-                                                    ch_lotux += sb.toString();
+                                                    ch_lotux += Integer.toHexString(i);
                                                     break;
                                                 }
                                             }
