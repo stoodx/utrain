@@ -4,7 +4,6 @@
     <string name="textViewFrom">Звідки:</string>
     <string name="textViewTo">Куди:</string>
     <string name="buttonRequest">Знайти</string>
-    <string-array name="spinnerFrom"></string-array>
     <string-array name="spinnerFromA">
         <item>А</item>
         <item>Б</item>

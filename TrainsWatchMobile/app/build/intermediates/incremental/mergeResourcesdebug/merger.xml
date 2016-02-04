@@ -1408,7 +1408,7 @@
         <item>Щ</item>
         <item>Ю</item>
         <item>Я</item>
-    </string-array><string name="buttonDate">Коли</string><string name="buttonRequest">Знайти</string><string-array name="spinnerFrom"/><string name="calendar_name">Виберіть дату відправки</string><string name="buttonReturnToMainWindow">До Главного Вікна</string><string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string><string name="textViewTo">Куди:</string></file><file path="D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\res\values\styles.xml" qualifiers=""><style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
+    </string-array><string name="buttonDate">Коли</string><string name="buttonRequest">Знайти</string><string name="calendar_name">Виберіть дату відправки</string><string name="buttonReturnToMainWindow">До Главного Вікна</string><string name="textViewCalendar">Виберіть дату відправки та натиснить кнопку До Главного Вікна</string><string name="textViewTo">Куди:</string></file><file path="D:\Work\utrain\trunk\TrainsWatchMobile\app\src\main\res\values\styles.xml" qualifiers=""><style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

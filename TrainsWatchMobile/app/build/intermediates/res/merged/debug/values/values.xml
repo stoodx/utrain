@@ -2,7 +2,6 @@
 <resources>
     <!-- From: file:/D:/Work/utrain/trunk/TrainsWatchMobile/app/src/main/res/values/strings.xml -->
     <eat-comment/>
-    <string-array name="spinnerFrom"/>
     <string-array name="spinnerFromA">
         <item>А</item>
         <item>Б</item>

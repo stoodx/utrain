@@ -34,12 +34,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public String m_strID;
         public String m_strName;
     }
-
+/*
     public class ParserParameter{
         public String str1;
         public String str2;
         public String str3;
-    }
+    }*/
 
     public class MyTimer extends CountDownTimer {
         public MyTimer(long millisInFuture, long countDownInterval)
@@ -840,7 +840,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean fillStationsBooking(String strResponse, Spinner spinner, List<Station> arr)
     {
         arr.clear();
-        ArrayAdapter adap = (ArrayAdapter) spinner.getAdapter();
+        @SuppressWarnings("unchecked")
+        ArrayAdapter<String> adap = (ArrayAdapter<String>) spinner.getAdapter();
         adap.clear();
         adap.notifyDataSetChanged();
 
@@ -929,7 +930,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return strResponse;
     }
 
-
+/*
     private boolean fillStationsDPRC(String strResponse, Spinner spinner, List<Station> arr)
     {
         arr.clear();
@@ -998,7 +999,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         spinner.setSelection(0);
         return true;
     }
-
+*/
     private String strToUTF16(String str){
 
         String strUTF6 = str;
@@ -1103,7 +1104,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         paramPost.put("another_ec", "0");
         paramPost.put("search", "");
 
-        HashMap<String, String> paramHeader = new HashMap<String, String>();
+        HashMap<String, String> paramHeader = new HashMap<>();
         paramHeader.put("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         paramHeader.put("GV-Token", m_strToken);
         paramHeader.put("GV-Unique-Host", "1");
@@ -1138,7 +1139,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void responseWatchRequest(String strResponse){
-        int nIndex = 0;
+        int nIndex;
         String str =  printUTF8Converter(strResponse);
         nIndex = strResponse.indexOf("\"error\":true");
         if (nIndex == -1) {
@@ -1165,267 +1166,269 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
         toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
     }
+    /*
+        final private static String CR = "\;
 
-    final private static String CR = "\n";
+        private  String parser(String strResponse){
+            String  strJSONResult = "";
+            if (strResponse.length() == 0){
+                strJSONResult =  "{\"error\":\"No data for operation\"}";
+                return strJSONResult;
+            }
 
-    private  String parser(String strResponse){
-        String  strJSONResult = "";
-        if (strResponse.length() == 0){
-            strJSONResult =  "{\"error\":\"No data for operation\"}";
-            return strJSONResult;
-        }
+            String strFrom = "";
+            String strTo = "";
+            String strDate = "";
+            int nIndex = 0;
+            int nLen = 0;
+            int i = 0;
+            char ch = 0;
+            List<String> listTrains = new ArrayList<String>();;
 
-        String strFrom = "";
-        String strTo = "";
-        String strDate = "";
-        int nIndex = 0;
-        int nLen = 0;
-        int i = 0;
-        char ch = 0;
-        List<String> listTrains = new ArrayList<String>();;
-
-        //target
-        nIndex = strResponse.indexOf("<div id=\"tables\" class='tables'>");
-        if (nIndex == -1)
-        {
-            strJSONResult ="{\"error\":\"No information\"}";
-            return strJSONResult;
-        }
-        nIndex += "<div id=\"tables\" class='tables'>".length();
-        strResponse = strResponse.substring(nIndex);
-        if (strResponse.length() == 0)
-        {
-            strJSONResult ="{\"error\":\"No table\"}";
-            return strJSONResult;
-        }
-
-        //date
-        nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
-        if (nIndex == -1)
-        {
-            strJSONResult ="{\"error\":\"No date1\"}";
-            return strJSONResult;
-        }
-        nIndex += "<span style='font-weight: bold;'>".length();
-        strResponse = strResponse.substring(nIndex);
-        nLen = strResponse.length();
-        if (nLen == 0)
-        {
-            strJSONResult = "{\"error\":\"No date2\"}";
-            return strJSONResult;
-        }
-        for (i = 0; i < nLen; i++)
-        {
-            ch = strResponse.charAt(i);
-            if (ch == '<')
-                break;
-            strDate += ch;
-        }
-        if (strDate.length() == 0)
-        {
-            strJSONResult ="{\"error\":\"No date3\"}";
-            return strJSONResult;
-        }
-        //from
-        nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
-        if (nIndex == -1)
-        {
-            strJSONResult = "{\"error\":\"No data for departure1\"}";
-            return strJSONResult;
-        }
-        nIndex +=  "<span style='font-weight: bold;'>".length();
-        strResponse = strResponse.substring(nIndex);
-        nLen = strResponse.length();
-        if (nLen == 0)
-        {
-            strJSONResult = "{\"error\":\"No data for departure2\"}";
-            return strJSONResult;
-        }
-        for (i = 0; i < nLen; i++)
-        {
-            ch = strResponse.charAt(i);
-            if (ch == '<')
-                break;
-            strFrom += ch;
-        }
-        if (strFrom.length() == 0)
-        {
-            strJSONResult = "{\"error\":\"No data for departure3\"}";
-            return strJSONResult;
-        }
-        //to
-        nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
-        if (nIndex == -1)
-        {
-            strJSONResult = "{\"error\":\"No data for destination1\"}";
-            return strJSONResult;
-        }
-        nIndex +=  "<span style='font-weight: bold;'>".length();
-        strResponse = strResponse.substring(nIndex);
-        nLen = strResponse.length();
-        if (nLen == 0)
-        {
-            strJSONResult = "{\"error\":\"No data for destination2\"}";
-            return strJSONResult;
-        }
-        for (i = 0; i < nLen; i++)
-        {
-            ch = strResponse.charAt(i);
-            if (ch == '<')
-            break;
-            strTo += ch;
-        }
-        if (strTo.length() == 0)
-        {
-            strJSONResult = "{\"error\":\"No data for destination3\"}";
-            return strJSONResult;
-        }
-
-        //Trains;
-        while(true){
-            String strTrainNumber;
-            String strTrainDeparture;
-            String strTrainDestination = "";
-            String strTrainDep;
-            String strTrainDuration;
-            String strTrainArrive;
-            String strTrainLuxPrice;
-            String strTrainLuxSeat;
-            String strTrainCompartmentFirmPrice;
-            String strTrainCompartmentFirmSeat;
-            String strTrainCompartmentPrice;
-            String strTrainCompartmentSeat;
-            String strTrainThirdClassFirmPrice;
-            String strTrainThirdClassFirmSeat;
-            String strTrainThirdClassPrice;
-            String strTrainThirdClassSeat;
-            String strTrainSeatsPrice;
-            String strTrainSeatsSeat;
-
-            ParserParameter par = new ParserParameter();
-
-            nIndex = strResponse.indexOf("<tr class=\"train_row\" id=\"row_");
+            //target
+            nIndex = strResponse.indexOf("<div id=\"tables\" class='tables'>");
             if (nIndex == -1)
-                break;
-            nIndex +=  "<tr class=\"train_row\" id=\"row_".length();
+            {
+                strJSONResult ="{\"error\":\"No information\"}";
+                return strJSONResult;
+            }
+            nIndex += "<div id=\"tables\" class='tables'>".length();
             strResponse = strResponse.substring(nIndex);
             if (strResponse.length() == 0)
+            {
+                strJSONResult ="{\"error\":\"No table\"}";
+                return strJSONResult;
+            }
+
+            //date
+            nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
+            if (nIndex == -1)
+            {
+                strJSONResult ="{\"error\":\"No date1\"}";
+                return strJSONResult;
+            }
+            nIndex += "<span style='font-weight: bold;'>".length();
+            strResponse = strResponse.substring(nIndex);
+            nLen = strResponse.length();
+            if (nLen == 0)
+            {
+                strJSONResult = "{\"error\":\"No date2\"}";
+                return strJSONResult;
+            }
+            for (i = 0; i < nLen; i++)
+            {
+                ch = strResponse.charAt(i);
+                if (ch == '<')
+                    break;
+                strDate += ch;
+            }
+            if (strDate.length() == 0)
+            {
+                strJSONResult ="{\"error\":\"No date3\"}";
+                return strJSONResult;
+            }
+            //from
+            nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
+            if (nIndex == -1)
+            {
+                strJSONResult = "{\"error\":\"No data for departure1\"}";
+                return strJSONResult;
+            }
+            nIndex +=  "<span style='font-weight: bold;'>".length();
+            strResponse = strResponse.substring(nIndex);
+            nLen = strResponse.length();
+            if (nLen == 0)
+            {
+                strJSONResult = "{\"error\":\"No data for departure2\"}";
+                return strJSONResult;
+            }
+            for (i = 0; i < nLen; i++)
+            {
+                ch = strResponse.charAt(i);
+                if (ch == '<')
+                    break;
+                strFrom += ch;
+            }
+            if (strFrom.length() == 0)
+            {
+                strJSONResult = "{\"error\":\"No data for departure3\"}";
+                return strJSONResult;
+            }
+            //to
+            nIndex = strResponse.indexOf("<span style='font-weight: bold;'>");
+            if (nIndex == -1)
+            {
+                strJSONResult = "{\"error\":\"No data for destination1\"}";
+                return strJSONResult;
+            }
+            nIndex +=  "<span style='font-weight: bold;'>".length();
+            strResponse = strResponse.substring(nIndex);
+            nLen = strResponse.length();
+            if (nLen == 0)
+            {
+                strJSONResult = "{\"error\":\"No data for destination2\"}";
+                return strJSONResult;
+            }
+            for (i = 0; i < nLen; i++)
+            {
+                ch = strResponse.charAt(i);
+                if (ch == '<')
                 break;
-            //number
-            par.str1 = strResponse;
-            if (!partParser(par,
-                    "<td class=\"info_row train first\" style='font-size: 14pt; vertical-align: top; margin-top: 0px; padding-top: 1px; padding-right: 0px;'>"))
-                break;
-            strResponse = par.str1;
-            strTrainNumber = par.str2;
-            if (strTrainNumber.length() == 0)
-                break;
+                strTo += ch;
+            }
+            if (strTo.length() == 0)
+            {
+                strJSONResult = "{\"error\":\"No data for destination3\"}";
+                return strJSONResult;
+            }
 
-            //departue
-            par.str1 = strResponse;
-            if (!partParser(par, "<td class=\"info_row name\">"))
-                break;
-            strResponse = par.str1;
-            strTrainDeparture = par.str2;
-            if (strTrainDeparture.length() == 0)
-                break;
+            //Trains;
+            while(true){
+                String strTrainNumber;
+                String strTrainDeparture;
+                String strTrainDestination = "";
+                String strTrainDep;
+                String strTrainDuration;
+                String strTrainArrive;
+                String strTrainLuxPrice;
+                String strTrainLuxSeat;
+                String strTrainCompartmentFirmPrice;
+                String strTrainCompartmentFirmSeat;
+                String strTrainCompartmentPrice;
+                String strTrainCompartmentSeat;
+                String strTrainThirdClassFirmPrice;
+                String strTrainThirdClassFirmSeat;
+                String strTrainThirdClassPrice;
+                String strTrainThirdClassSeat;
+                String strTrainSeatsPrice;
+                String strTrainSeatsSeat;
 
-            //dep.
-            par.str1 = strResponse;
-            if (!partParser(par, "<td class=\"info_row depart\">"))
-                break;
-            strResponse = par.str1;
-            strTrainDep = par.str2;
-            if (strTrainDep.length() == 0)
-                break;
+                ParserParameter par = new ParserParameter();
 
-            //duration
-            par.str1 = strResponse;
-            if (!partParser(par, "<td class=\"info_row onway\">&nbsp;"))
-                break;
-            strResponse = par.str1;
-            strTrainDuration = par.str2;
-            if (strTrainDuration.length() == 0)
-                break;
+                nIndex = strResponse.indexOf("<tr class=\"train_row\" id=\"row_");
+                if (nIndex == -1)
+                    break;
+                nIndex +=  "<tr class=\"train_row\" id=\"row_".length();
+                strResponse = strResponse.substring(nIndex);
+                if (strResponse.length() == 0)
+                    break;
+                //number
+                par.str1 = strResponse;
+                if (!partParser(par,
+                        "<td class=\"info_row train first\" style='font-size: 14pt; vertical-align: top; margin-top: 0px; padding-top: 1px; padding-right: 0px;'>"))
+                    break;
+                strResponse = par.str1;
+                strTrainNumber = par.str2;
+                if (strTrainNumber.length() == 0)
+                    break;
 
-            //arrive
-            par.str1 = strResponse;
-            if (!partParser(par, "<td class=\"info_row arrive\">"))
-                break;
-            strResponse = par.str1;
-            strTrainArrive = par.str2;
-            if (strTrainArrive.length() == 0)
-                break;
+                //departue
+                par.str1 = strResponse;
+                if (!partParser(par, "<td class=\"info_row name\">"))
+                    break;
+                strResponse = par.str1;
+                strTrainDeparture = par.str2;
+                if (strTrainDeparture.length() == 0)
+                    break;
 
-            //lux
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1050\">");
-            strResponse = par.str1;
-            strTrainLuxPrice = par.str2;
-            strTrainLuxSeat = par.str3;
+                //dep.
+                par.str1 = strResponse;
+                if (!partParser(par, "<td class=\"info_row depart\">"))
+                    break;
+                strResponse = par.str1;
+                strTrainDep = par.str2;
+                if (strTrainDep.length() == 0)
+                    break;
 
-            //compartment firm
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1040\">");
-            strResponse = par.str1;
-            strTrainCompartmentFirmPrice = par.str2;
-            strTrainCompartmentFirmSeat = par.str3;
+                //duration
+                par.str1 = strResponse;
+                if (!partParser(par, "<td class=\"info_row onway\">&nbsp;"))
+                    break;
+                strResponse = par.str1;
+                strTrainDuration = par.str2;
+                if (strTrainDuration.length() == 0)
+                    break;
 
-            //compartment
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1030\">");
-            strResponse = par.str1;
-            strTrainCompartmentPrice = par.str2;
-            strTrainCompartmentSeat = par.str3;
+                //arrive
+                par.str1 = strResponse;
+                if (!partParser(par, "<td class=\"info_row arrive\">"))
+                    break;
+                strResponse = par.str1;
+                strTrainArrive = par.str2;
+                if (strTrainArrive.length() == 0)
+                    break;
 
-            //third class firm
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1025\">");
-            strResponse = par.str1;
-            strTrainThirdClassFirmPrice = par.str2;
-            strTrainThirdClassFirmSeat = par.str3;
+                //lux
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1050\">");
+                strResponse = par.str1;
+                strTrainLuxPrice = par.str2;
+                strTrainLuxSeat = par.str3;
 
-            //third class
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1020\">");
-            strResponse = par.str1;
-            strTrainThirdClassPrice = par.str2;
-            strTrainThirdClassSeat = par.str3;
+                //compartment firm
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1040\">");
+                strResponse = par.str1;
+                strTrainCompartmentFirmPrice = par.str2;
+                strTrainCompartmentFirmSeat = par.str3;
 
-            //left seats
-            par.str1 = strResponse;
-            partParserWagon(par, " c_1001 last\">");
-            strResponse = par.str1;
-            strTrainSeatsPrice = par.str2;
-            strTrainSeatsSeat = par.str3;
+                //compartment
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1030\">");
+                strResponse = par.str1;
+                strTrainCompartmentPrice = par.str2;
+                strTrainCompartmentSeat = par.str3;
 
-            String strSumTrains = String.format(
-                    "\"train\": {%s\"number\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", \"dep.\": \"%s\", \"duration\": \"%s\", \"arrive\": \"%s\", %s\"lux\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment_firm\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment\": {\"price\": \"%s\", \"seats\": \"%s\"}, %s\"third_class_firm\": {\"price\": \"%s\", \"seats\": \"%s\"},  \"third_class\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"left_seats\": {\"price\": \"%s\", \"seats\": \"%s\"} },%s",
-                    CR, strTrainNumber, strTrainDeparture, strTrainDestination, strTrainDep, strTrainDuration, strTrainArrive,
-                    CR, strTrainLuxPrice, strTrainLuxSeat,
-                    strTrainCompartmentFirmPrice, strTrainCompartmentFirmSeat,
-                    strTrainCompartmentPrice, strTrainCompartmentSeat,
-                    CR, strTrainThirdClassFirmPrice, strTrainThirdClassFirmSeat,
-                    strTrainThirdClassPrice, strTrainThirdClassSeat,
-                    strTrainSeatsPrice,  strTrainSeatsSeat,
-                    CR);
-            listTrains.add(strSumTrains);
-        }//end white
+                //third class firm
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1025\">");
+                strResponse = par.str1;
+                strTrainThirdClassFirmPrice = par.str2;
+                strTrainThirdClassFirmSeat = par.str3;
 
-        strJSONResult = String.format(
-                "{\"target\":{%s\"date\": \"%s\",%s\"from\": \"%s\",%s\"to\": \"%s\"%s},%s\"trains\":{%s",
-                CR, strDate,CR,strFrom,CR,strTo,CR,CR,CR, CR
-        );
-        int nSize = listTrains.size();
-        for(i = 0; i < nSize; i++){
-            strJSONResult += listTrains.get(i);
+                //third class
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1020\">");
+                strResponse = par.str1;
+                strTrainThirdClassPrice = par.str2;
+                strTrainThirdClassSeat = par.str3;
+
+                //left seats
+                par.str1 = strResponse;
+                partParserWagon(par, " c_1001 last\">");
+                strResponse = par.str1;
+                strTrainSeatsPrice = par.str2;
+                strTrainSeatsSeat = par.str3;
+
+                String strSumTrains = String.format(
+                        "\"train\": {%s\"number\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", \"dep.\": \"%s\", \"duration\": \"%s\", \"arrive\": \"%s\", %s\"lux\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment_firm\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"compartment\": {\"price\": \"%s\", \"seats\": \"%s\"}, %s\"third_class_firm\": {\"price\": \"%s\", \"seats\": \"%s\"},  \"third_class\": {\"price\": \"%s\", \"seats\": \"%s\"}, \"left_seats\": {\"price\": \"%s\", \"seats\": \"%s\"} },%s",
+                        CR, strTrainNumber, strTrainDeparture, strTrainDestination, strTrainDep, strTrainDuration, strTrainArrive,
+                        CR, strTrainLuxPrice, strTrainLuxSeat,
+                        strTrainCompartmentFirmPrice, strTrainCompartmentFirmSeat,
+                        strTrainCompartmentPrice, strTrainCompartmentSeat,
+                        CR, strTrainThirdClassFirmPrice, strTrainThirdClassFirmSeat,
+                        strTrainThirdClassPrice, strTrainThirdClassSeat,
+                        strTrainSeatsPrice,  strTrainSeatsSeat,
+                        CR);
+                listTrains.add(strSumTrains);
+            }//end white
+
+            strJSONResult = String.format(
+                    "{\"target\":{%s\"date\": \"%s\",%s\"from\": \"%s\",%s\"to\": \"%s\"%s},%s\"trains\":{%s",
+                    CR, strDate,CR,strFrom,CR,strTo,CR,CR,CR, CR
+            );
+            int nSize = listTrains.size();
+            for(i = 0; i < nSize; i++){
+                strJSONResult += listTrains.get(i);
+            }
+            strJSONResult += "},";
+            strJSONResult += CR;
+            strJSONResult += "}";
+            return strJSONResult;
         }
-        strJSONResult += "},";
-        strJSONResult += CR;
-        strJSONResult += "}";
-        return strJSONResult;
-    }
+    */
 
+/*
     private boolean partParser(ParserParameter par, String str){
         String strResponse = par.str1;
         String strTarget = "";
@@ -1578,7 +1581,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return bResult;
     }
 
-
+*/
     public void onClickWatch(View view) {
         Button buttonWatch = (Button)findViewById(R.id.buttonWatch);
         Button buttonRequest = (Button)findViewById(R.id.buttonRequest);
