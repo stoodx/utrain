@@ -7,6 +7,7 @@
 #include <vector>
 #include "afxdtctl.h"
 #include <ctime>
+#include "UtrainControl.h"
 
 extern "C" {
 #include "duktape\duktape.h"
@@ -60,7 +61,7 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	bool SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse);
+	bool SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse); //delete me 
 	static duk_ret_t get_result_token(duk_context *ctx);
 	static CRailTickesDlg* m_pCRailTickesDlg;
 	std::wstring CreateUTMCokies();
@@ -75,6 +76,8 @@ private:
 	std::wstring  m_strToken;
 	std::wstring m_strResponseCookies;
 	int m_nVisitBooking;
+	CUtrainControl m_CUtrainControl;
+
 
 public:
 	afx_msg void OnClose();

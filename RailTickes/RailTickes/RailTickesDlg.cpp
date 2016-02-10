@@ -7,7 +7,7 @@
 #include "RailTickesDlg.h"
 #include "afxdialogex.h"
 
-#include "WinHttpClient.h"
+#include "WinHttpClient.h" //delete me
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,6 +18,7 @@
 #define TIMER_REFRESH_SESSION 15 * 60 * 1000 //15 min
 
 
+//delete me
 #define PUSH_C_FUNCTION(fcn, nargs) \
 	duk_push_c_function(ctx, fcn, nargs);\
 	duk_put_prop_string(ctx, -2, #fcn);
@@ -47,7 +48,7 @@ CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pCRailTickesDlg = this;
-	timeFirstVisit = time(nullptr);
+	timeFirstVisit = time(nullptr); //delete me
 }
 
 void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
@@ -606,6 +607,7 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.SetWindowText(L"Поиск");
 }
 
+//delete me
 bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
 {
 	strResponse = L"";

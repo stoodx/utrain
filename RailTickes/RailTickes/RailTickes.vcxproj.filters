@@ -54,6 +54,12 @@
     <ClInclude Include="duktape\duktape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BaseUtrainModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UtrainControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RailTickes.cpp">
@@ -66,6 +72,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="duktape\duktape.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseUtrainModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UtrainControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
