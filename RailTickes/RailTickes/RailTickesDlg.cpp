@@ -6,8 +6,9 @@
 #include "RailTickes.h"
 #include "RailTickesDlg.h"
 #include "afxdialogex.h"
+//#include "WinHttpClient.h"
+#include "UtrainControl.h"
 
-#include "WinHttpClient.h" //delete me
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,10 +19,7 @@
 #define TIMER_REFRESH_SESSION 15 * 60 * 1000 //15 min
 
 
-//delete me
-#define PUSH_C_FUNCTION(fcn, nargs) \
-	duk_push_c_function(ctx, fcn, nargs);\
-	duk_put_prop_string(ctx, -2, #fcn);
+
 
 // CRailTickesDlg dialog
 
@@ -36,8 +34,6 @@ struct Station
 	std::wstring m_strName;
 };
 
-CRailTickesDlg* CRailTickesDlg::m_pCRailTickesDlg = NULL;
-
 
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
@@ -45,10 +41,13 @@ CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	, m_strToken(L"")
 	, m_strResponseCookies(L"")
 	, m_nVisitBooking(1)
+	, m_pCUtrainControl(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_pCRailTickesDlg = this;
 	timeFirstVisit = time(nullptr); //delete me
+
+	m_pCUtrainControl = new CUtrainControl();
+	ASSERT(m_pCUtrainControl);
 }
 
 void CRailTickesDlg::DoDataExchange(CDataExchange* pDX)
@@ -101,13 +100,17 @@ BOOL CRailTickesDlg::OnInitDialog()
 	m_comboA_To.SetCurSel(1);
 	UpdateData(FALSE);
 
+	m_nBooking = false; //only booking
 	if (!m_nBooking)
 	{
-		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+		std::wstring strResponse;
+		if (!m_pCUtrainControl->sendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 			AfxMessageBox(strResponse.c_str());
 		else
+		{
 			m_strResponseCookies = strResponse;
+			SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
+		}
 	}
 
 	if (!FillStations(m_comboA_From, m_comboFrom, m_vecpStationsFrom) ||
@@ -164,7 +167,7 @@ bool CRailTickesDlg::FillStations(CComboBox& comboA, CComboBox& comboStation, st
 
 std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 {
-	wstring strResponse = L"";
+	std::wstring strResponse = L"";
 	if (str.empty())
 		return strResponse;
 
@@ -179,7 +182,7 @@ std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 	_status status = _empty;
 	wchar_t ch;
 	int nLen = str.size();
-	wstring strConvert;
+	std::wstring strConvert;
 	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', L'f'};
 	unsigned char nNumber[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
 
@@ -258,229 +261,230 @@ std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 	return strResponse;
 }
 
+//delete me
 bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
-	CString strError;
+	//CString strError;
 
-	comboStation.ResetContent();
-	CleanStations(&vecpStations);
+	//comboStation.ResetContent();
+	//CleanStations(&vecpStations);
 
-	wstring strURL(L"http://booking.uz.gov.ua/ru/purchase/station/");
-	CString strA;
-	comboA.GetLBText(comboA.GetCurSel(), strA);
-	strURL.append(strA);
-	WinHttpClient request(strURL);
+	//std::wstring strURL(L"http://booking.uz.gov.ua/ru/purchase/station/");
+	//CString strA;
+	//comboA.GetLBText(comboA.GetCurSel(), strA);
+	//strURL.append(strA);
+	//WinHttpClient request(strURL);
 
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	request.SetAdditionalRequestHeaders(strHeaders);
+	//// Set request headers.
+	//wstring strHeaders = L"Content-Length: ";
+	//strHeaders += L"0";
+	//strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	//request.SetAdditionalRequestHeaders(strHeaders);
 
-	// Send http post request.
-	if ( !request.SendHttpRequest(L"Get"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		AfxMessageBox(strError);
-		return false;
-	}
+	//// Send http post request.
+	//if ( !request.SendHttpRequest(L"Get"))
+	//{
+	//	strError.Format(L"Error sending: %i", request.GetLastError());
+	//	AfxMessageBox(strError);
+	//	return false;
+	//}
 
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
+	//wstring str_httpResponseCode = request.GetResponseStatusCode();
+	//wstring str_httpResponseContent = request.GetResponseContent();
 
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		AfxMessageBox(strError);
-		return false;
-	}
-	if (str_httpResponseContent.empty())
-	{
-		AfxMessageBox(L"No response");
-		return false;
-	}
+	//if (str_httpResponseCode.compare(L"200"))
+	//{
+	//	strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+	//	AfxMessageBox(strError);
+	//	return false;
+	//}
+	//if (str_httpResponseContent.empty())
+	//{
+	//	AfxMessageBox(L"No response");
+	//	return false;
+	//}
 
-	int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
-	if (nIndex == wstring::npos)
-	{
-		AfxMessageBox(L"Bad format");
-		return false;
-	}
-	nIndex +=  _tcslen(L"{\"value\":[{");
-	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-	while(true)
-	{
-		nIndex = str_httpResponseContent.find(L"\"title\":\"");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"\"title\":\"");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		//station
-		wstring strName(L"");
-		int i, nLen;
-		nLen = str_httpResponseContent.size();
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'\"')
-				break;
-			strName += c;
-		}
+	//int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
+	//if (nIndex == wstring::npos)
+	//{
+	//	AfxMessageBox(L"Bad format");
+	//	return false;
+	//}
+	//nIndex +=  _tcslen(L"{\"value\":[{");
+	//str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//while(true)
+	//{
+	//	nIndex = str_httpResponseContent.find(L"\"title\":\"");
+	//	if (nIndex == wstring::npos)
+	//		break;
+	//	nIndex +=  _tcslen(L"\"title\":\"");
+	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//	if (str_httpResponseContent.empty())
+	//		break;
+	//	//station
+	//	wstring strName(L"");
+	//	int i, nLen;
+	//	nLen = str_httpResponseContent.size();
+	//	for (i = 0; i < nLen; i++)
+	//	{
+	//		wchar_t c = str_httpResponseContent[i];
+	//		if (c == L'\"')
+	//			break;
+	//		strName += c;
+	//	}
 
-		//id
-		nIndex = str_httpResponseContent.find(L"\"station_id\":");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"\"station_id\":");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		nLen = str_httpResponseContent.size();
-		wstring strID(L"");
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'}')
-				break;
-			strID += c;
-		}
-		int nId = std::stoi(strID);
-		if (nId < 2200000 || nId > 2299999)
-			continue; //only Ukraine
+	//	//id
+	//	nIndex = str_httpResponseContent.find(L"\"station_id\":");
+	//	if (nIndex == wstring::npos)
+	//		break;
+	//	nIndex +=  _tcslen(L"\"station_id\":");
+	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//	if (str_httpResponseContent.empty())
+	//		break;
+	//	nLen = str_httpResponseContent.size();
+	//	wstring strID(L"");
+	//	for (i = 0; i < nLen; i++)
+	//	{
+	//		wchar_t c = str_httpResponseContent[i];
+	//		if (c == L'}')
+	//			break;
+	//		strID += c;
+	//	}
+	//	int nId = std::stoi(strID);
+	//	if (nId < 2200000 || nId > 2299999)
+	//		continue; //only Ukraine
 
-		Station* pStation = NULL; 
-		pStation =  new Station;
-		ASSERT(pStation);
-		pStation->m_strID = strID;
-		pStation->m_strName = PrintUTF16Converter(strName);
-		vecpStations.push_back(pStation);
-	}
-	if (vecpStations.empty())
-	{
-		AfxMessageBox(L"No enries.");
-		return false;
-	}
+	//	Station* pStation = NULL; 
+	//	pStation =  new Station;
+	//	ASSERT(pStation);
+	//	pStation->m_strID = strID;
+	//	pStation->m_strName = PrintUTF16Converter(strName);
+	//	vecpStations.push_back(pStation);
+	//}
+	//if (vecpStations.empty())
+	//{
+	//	AfxMessageBox(L"No enries.");
+	//	return false;
+	//}
 
-	int nSize = vecpStations.size();
-	for (int j = 0; j < nSize; j++)
-	{
-		Station* pStation = vecpStations[j];
-		comboStation.AddString(pStation->m_strName.c_str());
-	}
-	comboStation.SetCurSel(0);
+	//int nSize = vecpStations.size();
+	//for (int j = 0; j < nSize; j++)
+	//{
+	//	Station* pStation = vecpStations[j];
+	//	comboStation.AddString(pStation->m_strName.c_str());
+	//}
+	//comboStation.SetCurSel(0);
 	return true;
 }
 
 bool CRailTickesDlg::FillStationsDPRC(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
-	CString strError;
+	//CString strError;
 
-	comboStation.ResetContent();
-	CleanStations(&vecpStations);
+	//comboStation.ResetContent();
+	//CleanStations(&vecpStations);
 
-	wstring strURL(L"http://dprc.gov.ua/awg/xml?class_name=IStations&method_name=search_station&var_0=2&var_1=2&var_2=0&var_3=16&var_4=");
-	CString strA;
-	comboA.GetLBText(comboA.GetCurSel(), strA);
-	strURL.append(strA);
-	WinHttpClient request(strURL);
+	//std::wstring strURL(L"http://dprc.gov.ua/awg/xml?class_name=IStations&method_name=search_station&var_0=2&var_1=2&var_2=0&var_3=16&var_4=");
+	//CString strA;
+	//comboA.GetLBText(comboA.GetCurSel(), strA);
+	//strURL.append(strA);
+	//WinHttpClient request(strURL);
 
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	request.SetAdditionalRequestHeaders(strHeaders);
+	//// Set request headers.
+	//std::wstring strHeaders = L"Content-Length: ";
+	//strHeaders += L"0";
+	//strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	//request.SetAdditionalRequestHeaders(strHeaders);
 
-	// Send http post request.
-	if ( !request.SendHttpRequest(L"Get"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		AfxMessageBox(strError);
-		return false;
-	}
+	//// Send http post request.
+	//if ( !request.SendHttpRequest(L"Get"))
+	//{
+	//	strError.Format(L"Error sending: %i", request.GetLastError());
+	//	AfxMessageBox(strError);
+	//	return false;
+	//}
 
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
+	//wstring str_httpResponseCode = request.GetResponseStatusCode();
+	//wstring str_httpResponseContent = request.GetResponseContent();
 
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		AfxMessageBox(strError);
-		return false;
-	}
-	if (str_httpResponseContent.empty())
-	{
-		AfxMessageBox(L"No response");
-		return false;
-	}
+	//if (str_httpResponseCode.compare(L"200"))
+	//{
+	//	strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+	//	AfxMessageBox(strError);
+	//	return false;
+	//}
+	//if (str_httpResponseContent.empty())
+	//{
+	//	AfxMessageBox(L"No response");
+	//	return false;
+	//}
 
-	int nIndex = str_httpResponseContent.find(L"<MSG><var_0>");
-	if (nIndex == wstring::npos)
-	{
-		AfxMessageBox(L"Bad format");
-		return false;
-	}
-	nIndex +=  _tcslen(L"<MSG><var_0>");
-	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//int nIndex = str_httpResponseContent.find(L"<MSG><var_0>");
+	//if (nIndex == wstring::npos)
+	//{
+	//	AfxMessageBox(L"Bad format");
+	//	return false;
+	//}
+	//nIndex +=  _tcslen(L"<MSG><var_0>");
+	//str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
 
-	while(true)
-	{
-		nIndex = str_httpResponseContent.find(L"<childs><i v=\"");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"<childs><i v=\"");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		//id
-		int i;
-		int nLen = str_httpResponseContent.size();
-		wstring strID(L"");
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'\"')
-				break;
-			strID += c;
-		}
-		//name
-		nIndex = str_httpResponseContent.find(L"<i v=\"");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"<i v=\"");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		wstring strName(L"");
-		nLen = str_httpResponseContent.size();
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'\"')
-				break;
-			strName += c;
-		}
-		Station* pStation = NULL; 
-		pStation =  new Station;
-		ASSERT(pStation);
-		pStation->m_strID = strID;
-		pStation->m_strName = strName;
-		vecpStations.push_back(pStation);
-	}
-	if (vecpStations.empty())
-	{
-		AfxMessageBox(L"No enries.");
-		return false;
-	}
+	//while(true)
+	//{
+	//	nIndex = str_httpResponseContent.find(L"<childs><i v=\"");
+	//	if (nIndex == wstring::npos)
+	//		break;
+	//	nIndex +=  _tcslen(L"<childs><i v=\"");
+	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//	if (str_httpResponseContent.empty())
+	//		break;
+	//	//id
+	//	int i;
+	//	int nLen = str_httpResponseContent.size();
+	//	wstring strID(L"");
+	//	for (i = 0; i < nLen; i++)
+	//	{
+	//		wchar_t c = str_httpResponseContent[i];
+	//		if (c == L'\"')
+	//			break;
+	//		strID += c;
+	//	}
+	//	//name
+	//	nIndex = str_httpResponseContent.find(L"<i v=\"");
+	//	if (nIndex == wstring::npos)
+	//		break;
+	//	nIndex +=  _tcslen(L"<i v=\"");
+	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	//	if (str_httpResponseContent.empty())
+	//		break;
+	//	wstring strName(L"");
+	//	nLen = str_httpResponseContent.size();
+	//	for (i = 0; i < nLen; i++)
+	//	{
+	//		wchar_t c = str_httpResponseContent[i];
+	//		if (c == L'\"')
+	//			break;
+	//		strName += c;
+	//	}
+	//	Station* pStation = NULL; 
+	//	pStation =  new Station;
+	//	ASSERT(pStation);
+	//	pStation->m_strID = strID;
+	//	pStation->m_strName = strName;
+	//	vecpStations.push_back(pStation);
+	//}
+	//if (vecpStations.empty())
+	//{
+	//	AfxMessageBox(L"No enries.");
+	//	return false;
+	//}
 
-	int nSize = vecpStations.size();
-	for (int j = 0; j < nSize; j++)
-	{
-		Station* pStation = vecpStations[j];
-		comboStation.AddString(pStation->m_strName.c_str());
-	}
-	comboStation.SetCurSel(0);
+	//int nSize = vecpStations.size();
+	//for (int j = 0; j < nSize; j++)
+	//{
+	//	Station* pStation = vecpStations[j];
+	//	comboStation.AddString(pStation->m_strName.c_str());
+	//}
+	//comboStation.SetCurSel(0);
 	return true;
 }
 
@@ -504,7 +508,8 @@ void CRailTickesDlg::OnClose()
 	KillTimer(timerRefreshSession);
 	CleanStations(&m_vecpStationsFrom);
 	CleanStations(&m_vecpStationsTo);
-	m_pCRailTickesDlg = NULL;
+	if (m_pCUtrainControl)
+		delete m_pCUtrainControl;
 	CDialogEx::OnClose();
 }
 
@@ -522,7 +527,7 @@ void CRailTickesDlg::OnCbnSelchangeComboATo()
 
 std::string CRailTickesDlg::UTF16toUTF8(const std::wstring strUTF16)
 {
-   string strUTF8;
+   std::string strUTF8;
    int len = WideCharToMultiByte(CP_UTF8, 0, strUTF16.c_str(), -1, NULL, 0, 0, 0);
    if (len>1)
    { 
@@ -539,7 +544,7 @@ std::string CRailTickesDlg::UTF16toUTF8(const std::wstring strUTF16)
 
 std::string  CRailTickesDlg::UrlEncode(const std::string str)
 {
-	string escaped("");
+	std::string escaped("");
 	if (str.empty())
 		return escaped;
 
@@ -579,7 +584,7 @@ std::string  CRailTickesDlg::Char2hex(char c)
     if (10<= dig2 && dig2<=15) 
 		dig2+= 65-10;//97-10;
 
-    string r("");
+    std::string r("");
     r += dig1;
     r += dig2;
     return r;
@@ -596,7 +601,7 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.EnableWindow(FALSE);
 	m_btnSearch.SetWindowText(L"Ожидайте...");
 
-	wstring strJSON;
+	std::wstring strJSON;
 	if (m_nBooking)
 		strJSON = RequestDPRC();
 	else
@@ -607,172 +612,29 @@ void CRailTickesDlg::OnBnClickedOk()
 	m_btnSearch.SetWindowText(L"Поиск");
 }
 
-//delete me
-bool CRailTickesDlg::SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
-{
-	strResponse = L"";
-	WinHttpClient request(strURL);
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	request.SetAdditionalRequestHeaders(strHeaders);
-	CString strError;
-
-	// Send http post request.
-	if (!request.SendHttpRequest(L"Get"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		strResponse =  strError.GetBuffer();
-		return false;
-	}
-
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
-	wstring str_httpResponseCookies = request.GetResponseCookies();
-
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		strResponse =  strError.GetBuffer();
-		return false;
-	}
-	if (str_httpResponseContent.empty())
-	{
-		strResponse =  L"No response";
-		return false;
-	}
-
-	int nIndex;
-	nIndex = str_httpResponseContent.find(L"gaq.push(['_trackPageview']);");
-	if (nIndex == wstring::npos)
-	{
-		strResponse = L"Token: bad format";
-		return false;
-	}
-	nIndex += _tcslen(L"gaq.push(['_trackPageview']);");
-	str_httpResponseContent = str_httpResponseContent.substr(nIndex);
-	nIndex = str_httpResponseContent.find(L"(function ()");
-	if (nIndex == wstring::npos)
-	{
-		strResponse = L"Token: bad format";
-		return false;
-	}
-	str_httpResponseContent = str_httpResponseContent.substr(0, nIndex);
-	string strToken = UTF16toUTF8(str_httpResponseContent);
-
-	//gv-token
-	duk_context* ctx = duk_create_heap_default();
-	if(!ctx)
-	{
-		strResponse = L"HEAP_CREATION_ERROR";
-		return false;
-	}
-	duk_push_global_object(ctx);
-	PUSH_C_FUNCTION(get_result_token, 1);
-	//run js
-	if (duk_peval_file(ctx, "jjdecode.js") == 0)
-	{
-		duk_pop(ctx);
-		duk_get_prop_string(ctx, -1, "jjdecode");
-		duk_push_string(ctx, strToken.c_str());
- 		if (duk_pcall(ctx, 1) != 0)
-		{
-			strResponse = CString(duk_safe_to_string(ctx, -1));
-			duk_pop(ctx);
-			duk_destroy_heap(ctx);
-			return false;
-		}
-		duk_pop(ctx);
-	}
-	else
-	{
-		strResponse = CString(duk_safe_to_string(ctx, -1));
-		duk_pop(ctx);
-		duk_destroy_heap(ctx);
-		return false;
-	}
-
-	duk_pop(ctx);
-	duk_destroy_heap(ctx);
-
-	//cookies
-	//_gv_sessid
-	nIndex = str_httpResponseCookies.find(L"_gv_sessid");
-	int nLen = str_httpResponseCookies.size();
-	wstring strTmp;
-	int i;
-	wchar_t c;
-	if (nIndex == wstring::npos)
-	{
-		strResponse = L"No _gv_sessid";
-		return false;
-	}
-	for(i = nIndex; i < nLen; i++)
-	{
-		c = str_httpResponseCookies.at(i);
-		strResponse += c;
-		if (c == L';')
-			break;
-	}
-	strResponse += L' ';
-	//_gv_lang
-	nIndex = str_httpResponseCookies.find(L"_gv_lang");
-	if (nIndex == wstring::npos)
-	{
-		strResponse = L"No _gv_lang";
-		return false;
-	}
-	for(i = nIndex; i < nLen; i++)
-	{
-		c = str_httpResponseCookies.at(i);
-		strResponse += c;
-		if (c == L';')
-			break;
-	}
-	strResponse += L' ';
-	//HTTPSERVERID
-	nIndex = str_httpResponseCookies.find(L"HTTPSERVERID");
-	if (nIndex == wstring::npos)
-	{
-		strResponse = L"No HTTPSERVERID";
-		return false;
-	}
-	for(i = nIndex; i < nLen; i++)
-	{
-		c = str_httpResponseCookies.at(i);
-		strResponse += c;
-		if (c == L';')
-			break;
-	}
-	strResponse += L' ';
-	SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
-	return true;
-}
-
 
 std::wstring CRailTickesDlg::CreateUTMCokies()
 {
-	wstring strCookies(L" __utma=");
+	std::wstring strCookies(L" __utma=");
 
 	//hash domain
-	hash<wstring> hash;
-	wstring strDomain = L"kvy.com.ua";
-	wstring strHashDomain = to_wstring(hash(strDomain)); //L"31515437";
-	wstring strTimeCurrentVisit = to_wstring(time(nullptr));
+	std::hash<std::wstring> hash;
+	std::wstring strDomain = L"kvy.com.ua";
+	std::wstring strHashDomain = std::to_wstring(hash(strDomain)); //L"31515437";
+	std::wstring strTimeCurrentVisit = std::to_wstring(time(nullptr));
 
 	//utma
 	strCookies += strHashDomain;
 	strCookies += L'.';
-	strCookies += to_wstring(21589326); //ID user in Google Analistics
+	strCookies += std::to_wstring(21589326); //ID user in Google Analistics
 	strCookies += L'.';
-	strCookies += to_wstring(timeFirstVisit); //first visit
+	strCookies += std::to_wstring(timeFirstVisit); //first visit
 	strCookies += L'.';
-	strCookies += to_wstring(timeFirstVisit);//prev. visit
+	strCookies += std::to_wstring(timeFirstVisit);//prev. visit
 	strCookies += L'.';
 	strCookies += strTimeCurrentVisit;//curr. visit
 	strCookies += L'.';
-	strCookies += to_wstring(m_nVisitBooking++);
+	strCookies += std::to_wstring(m_nVisitBooking++);
 	strCookies += L"; __utmb=";
 
 	//utmb
@@ -794,163 +656,165 @@ std::wstring CRailTickesDlg::CreateUTMCokies()
 	return strCookies;
 }
 
+//delete me
 std::wstring CRailTickesDlg::RequestBookong()
 {
+	return NULL;
+	//if (m_strToken.empty())
+	//{
+	//	std::wstring strResponse;
+	//	if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+	//	{
+	//		return CString(strResponse.c_str()).GetBuffer();
+	//	}
+	//	else
+	//		m_strResponseCookies = strResponse;
+	//	return L"Try to send a request once again";
+	//}
 
-	if (m_strToken.empty())
-	{
-		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
-		{
-			return CString(strResponse.c_str()).GetBuffer();
-		}
-		else
-			m_strResponseCookies = strResponse;
-		return L"Try to send a request once again";
-	}
+	//int nCurrentPosForm = m_comboFrom.GetCurSel();
+	//int nCurrentPosTo = m_comboTo.GetCurSel();
+	//const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
+	//const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
+	//const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
+	//const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
 
-	int nCurrentPosForm = m_comboFrom.GetCurSel();
-	int nCurrentPosTo = m_comboTo.GetCurSel();
-	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
-	const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
-	const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
-	const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
+	//SYSTEMTIME dateTime;
+	//m_calendar.GetCurSel(&dateTime);
+	//wchar_t strURL[MAX_PATH] = {0};
+	//char strPost[MAX_PATH * 2] = {0};
 
-	SYSTEMTIME dateTime;
-	m_calendar.GetCurSel(&dateTime);
-	wchar_t strURL[MAX_PATH] = {0};
-	char strPost[MAX_PATH * 2] = {0};
+	//char strDay[3] = {0};
+	//char strMonth[3] = {0};
+	//if (dateTime.wDay < 10)
+	//	sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
+	//else
+	//	sprintf_s(strDay, 3,  "%d", dateTime.wDay);
+	//if (dateTime.wMonth < 10)
+	//	sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
+	//else
+	//	sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);
 
-	char strDay[3] = {0};
-	char strMonth[3] = {0};
-	if (dateTime.wDay < 10)
-		sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
-	else
-		sprintf_s(strDay, 3,  "%d", dateTime.wDay);
-	if (dateTime.wMonth < 10)
-		sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
-	else
-		sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);
+	//_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
+	//sprintf_s(strPost, 2 * MAX_PATH, 
+	//	"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%s.%s.%d&time_dep=00%%3A00&time_dep_till=&another_ec=0&search=",
+	//	UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
+	//	UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
+	//	strDay, strMonth, dateTime.wYear);
+	//	
+	//WinHttpClient request(strURL);
+	//// Set request headers.
+	//wstring strHeaders = L"Content-Length: ";
+	//int nLen =  strlen(strPost);
+	//request.SetAdditionalDataToSend((BYTE *)strPost, nLen);
+	//wchar_t szSize[50] = L"";
+	//swprintf_s(szSize, L"%d", nLen);
+	//strHeaders += szSize;
+	//strHeaders += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n";
+	//strHeaders += L"GV-Token: ";
+	//strHeaders += m_strToken;
+	//strHeaders += L"\r\nGV-Unique-Host: 1";
+	//strHeaders += L"\r\nGV-Ajax: 1";
+	//strHeaders += L"\r\nGV-Screen: 1920x1080";
+	//strHeaders += L"\r\nGV-Referer: http://booking.uz.gov.ua/ru/";
+	//strHeaders += L"\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*;q=0.8";
+	//strHeaders += L"\r\nAccept-Language: ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2";
+	//strHeaders += L"\r\nAccept-Encoding: gzip, deflate";
+	//strHeaders += L"\r\nAccept: */*";
+	//strHeaders += L"\r\nReferer: http://booking.uz.gov.ua/ru/";
+	//strHeaders += L"\r\nCookie: ";
+	//strHeaders += m_strResponseCookies;
+	//strHeaders += CreateUTMCokies();
+	//strHeaders += L"\r\n";
+ //   strHeaders += L"Connection: keep-alive\r\n\r\n";
 
-	_tcscpy_s(strURL, MAX_PATH, L"http://booking.uz.gov.ua/ru/purchase/search/");
-	sprintf_s(strPost, 2 * MAX_PATH, 
-		"station_id_from=%s&station_id_till=%s&station_from=%s&station_till=%s&date_dep=%s.%s.%d&time_dep=00%%3A00&time_dep_till=&another_ec=0&search=",
-		UTF16toUTF8(strIDFrom).c_str(), UTF16toUTF8(strIDTo).c_str(), 
-		UrlEncode(UTF16toUTF8(strStationFrom)).c_str(), UrlEncode(UTF16toUTF8(strStationTo)).c_str(), 
-		strDay, strMonth, dateTime.wYear);
-		
-	WinHttpClient request(strURL);
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	int nLen =  strlen(strPost);
-	request.SetAdditionalDataToSend((BYTE *)strPost, nLen);
-	wchar_t szSize[50] = L"";
-	swprintf_s(szSize, L"%d", nLen);
-	strHeaders += szSize;
-	strHeaders += L"\r\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n";
-	strHeaders += L"GV-Token: ";
-	strHeaders += m_strToken;
-	strHeaders += L"\r\nGV-Unique-Host: 1";
-	strHeaders += L"\r\nGV-Ajax: 1";
-	strHeaders += L"\r\nGV-Screen: 1920x1080";
-	strHeaders += L"\r\nGV-Referer: http://booking.uz.gov.ua/ru/";
-	strHeaders += L"\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*;q=0.8";
-	strHeaders += L"\r\nAccept-Language: ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4,bg;q=0.2";
-	strHeaders += L"\r\nAccept-Encoding: gzip, deflate";
-	strHeaders += L"\r\nAccept: */*";
-	strHeaders += L"\r\nReferer: http://booking.uz.gov.ua/ru/";
-	strHeaders += L"\r\nCookie: ";
-	strHeaders += m_strResponseCookies;
-	strHeaders += CreateUTMCokies();
-	strHeaders += L"\r\n";
-    strHeaders += L"Connection: keep-alive\r\n\r\n";
+	//request.SetAdditionalRequestHeaders(strHeaders);
+	//CString strError;
 
-	request.SetAdditionalRequestHeaders(strHeaders);
-	CString strError;
+	//// Send http post request.
+	//if ( !request.SendHttpRequest(L"Post"))
+	//{
+	//	strError.Format(L"Error sending: %i", request.GetLastError());
+	//	return strError.GetBuffer();
+	//}
 
-	// Send http post request.
-	if ( !request.SendHttpRequest(L"Post"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		return strError.GetBuffer();
-	}
+	//wstring str_httpResponseCode = request.GetResponseStatusCode();
+	//wstring str_httpResponseContent = request.GetResponseContent();
 
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
-
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		return strError.GetBuffer();
-	}
-	if (str_httpResponseContent.empty())
-	{
-		return L"No response";
-	}
-	wstring strJSON;
-	ParserBooking(str_httpResponseContent, strJSON);
-	return strJSON;
+	//if (str_httpResponseCode.compare(L"200"))
+	//{
+	//	strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+	//	return strError.GetBuffer();
+	//}
+	//if (str_httpResponseContent.empty())
+	//{
+	//	return L"No response";
+	//}
+	//wstring strJSON;
+	//ParserBooking(str_httpResponseContent, strJSON);
+	//return strJSON;
 }
 
 std::wstring CRailTickesDlg::RequestDPRC()
 {
-	int nCurrentPosForm = m_comboFrom.GetCurSel();
-	int nCurrentPosTo = m_comboTo.GetCurSel();
-	const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
-	const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
-	const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
-	const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
+	return NULL;
+	//int nCurrentPosForm = m_comboFrom.GetCurSel();
+	//int nCurrentPosTo = m_comboTo.GetCurSel();
+	//const wchar_t* strIDFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strID.c_str();
+	//const wchar_t* strStationFrom = m_vecpStationsFrom[nCurrentPosForm]->m_strName.c_str();
+	//const wchar_t* strIDTo = m_vecpStationsTo[nCurrentPosTo]->m_strID.c_str();
+	//const wchar_t* strStationTo = m_vecpStationsTo[nCurrentPosTo]->m_strName.c_str();
 
 
-	SYSTEMTIME dateTime;
-	m_calendar.GetCurSel(&dateTime);
-	
-	char strDay[3] = {0};
-	char strMonth[3] = {0};
-	if (dateTime.wDay < 10)
-		sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
-	else
-		sprintf_s(strDay, 3,  "%d", dateTime.wDay);
-	if (dateTime.wMonth < 10)
-		sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
-	else
-		sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);	
-	
-	wchar_t strURL[MAX_PATH] = {0};
-	if (m_nBooking)
-		_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%s-%s&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
-			strIDFrom, strIDTo, dateTime.wYear,  strMonth, strDay);
+	//SYSTEMTIME dateTime;
+	//m_calendar.GetCurSel(&dateTime);
+	//
+	//char strDay[3] = {0};
+	//char strMonth[3] = {0};
+	//if (dateTime.wDay < 10)
+	//	sprintf_s(strDay, 3,  "0%d", dateTime.wDay);
+	//else
+	//	sprintf_s(strDay, 3,  "%d", dateTime.wDay);
+	//if (dateTime.wMonth < 10)
+	//	sprintf_s(strMonth, 3,  "0%d", dateTime.wMonth);
+	//else
+	//	sprintf_s(strMonth, 3,  "%d", dateTime.wMonth);	
+	//
+	//wchar_t strURL[MAX_PATH] = {0};
+	//if (m_nBooking)
+	//	_stprintf_s(strURL, MAX_PATH, L"http://dprc.gov.ua/show.php?transport_type=2&src=%s&dst=%s&dt=%d-%s-%s&ret_dt=2001-01-01&ps=ec_privat&set_language=1",
+	//		strIDFrom, strIDTo, dateTime.wYear,  strMonth, strDay);
 
-	WinHttpClient request(strURL);
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	request.SetAdditionalRequestHeaders(strHeaders);
-	CString strError;
+	//WinHttpClient request(strURL);
+	//// Set request headers.
+	//wstring strHeaders = L"Content-Length: ";
+	//strHeaders += L"0";
+	//strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	//request.SetAdditionalRequestHeaders(strHeaders);
+	//CString strError;
 
-	// Send http post request.
-	if ( !request.SendHttpRequest(L"Get"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		return strError.GetBuffer();
-	}
+	//// Send http post request.
+	//if ( !request.SendHttpRequest(L"Get"))
+	//{
+	//	strError.Format(L"Error sending: %i", request.GetLastError());
+	//	return strError.GetBuffer();
+	//}
 
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
+	//wstring str_httpResponseCode = request.GetResponseStatusCode();
+	//wstring str_httpResponseContent = request.GetResponseContent();
 
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		return strError.GetBuffer();
-	}
-	if (str_httpResponseContent.empty())
-	{
-		return L"No response";
-	}
-	wstring strJSON;
-	ParserDPRC(str_httpResponseContent, strJSON);
-	return strJSON;
+	//if (str_httpResponseCode.compare(L"200"))
+	//{
+	//	strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+	//	return strError.GetBuffer();
+	//}
+	//if (str_httpResponseContent.empty())
+	//{
+	//	return L"No response";
+	//}
+	//wstring strJSON;
+	//ParserDPRC(str_httpResponseContent, strJSON);
+	//return strJSON;
 }
 
 bool CRailTickesDlg::PartParser(std::wstring& strResponse, const wchar_t* str, std::wstring& strTarget)
@@ -961,7 +825,7 @@ bool CRailTickesDlg::PartParser(std::wstring& strResponse, const wchar_t* str, s
 
 	strTarget = L"";
 	nIndex = strResponse.find(str);
-	if (nIndex == wstring::npos)
+	if (nIndex == std::wstring::npos)
 		return false;
 	nIndex +=  _tcslen(str);
 	strResponse = strResponse.substr(nIndex, strResponse.size() - nIndex);
@@ -987,17 +851,17 @@ bool CRailTickesDlg::PartParserWagon(std::wstring& strResponse, const wchar_t* s
 	strPrice = L"";
 	strSeats = L"";
 	bool bResult = false;
-	wstring strSub;
+	std::wstring strSub;
 
 	nIndex1 = strResponse.find(str);
-	if (nIndex1 == wstring::npos)
+	if (nIndex1 == std::wstring::npos)
 		return bResult;
 	nIndex1 +=  _tcslen(str);
 	strResponse = strResponse.substr(nIndex1, strResponse.size() - nIndex1);
 	if (strResponse.empty())
 		return bResult;
 	nIndex2 = strResponse.find(L"</td>");
-	if (nIndex2 == wstring::npos)
+	if (nIndex2 == std::wstring::npos)
 	{
 		return bResult;
 	}
@@ -1012,7 +876,7 @@ bool CRailTickesDlg::PartParserWagon(std::wstring& strResponse, const wchar_t* s
 
 	//price and seats
 	nIndex1 = strSub.find(L"<p class='price'>");
-	if (nIndex1 != wstring::npos)
+	if (nIndex1 != std::wstring::npos)
 	{
 		nIndex1 +=  _tcslen(L"<p class='price'>");
 		strSub = strSub.substr(nIndex1, strSub.size() - nIndex1);
@@ -1029,7 +893,7 @@ bool CRailTickesDlg::PartParserWagon(std::wstring& strResponse, const wchar_t* s
 		if (strPrice.empty())
 			goto end;
 		nIndex1 = strSub.find(L"<p class='seats_avail'>");
-		if (nIndex1 == wstring::npos)
+		if (nIndex1 == std::wstring::npos)
 			goto end;
 		nIndex1 +=  _tcslen(L"<p class='seats_avail'>");
 		strSub = strSub.substr(nIndex1, strSub.size() - nIndex1);
@@ -1068,18 +932,18 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 		return;
 	}
 
-	wstring strFrom(L"");
-	wstring strTo(L"");
-	wstring strDate(L"");
+	std::wstring strFrom(L"");
+	std::wstring strTo(L"");
+	std::wstring strDate(L"");
 	int nIndex = 0;
 	int nLen = 0;
 	int i;
 	wchar_t ch;
-	vector<wstring> vecstrTrains;
+	std::vector<std::wstring> vecstrTrains;
 
 	//target
 	nIndex = strResponse.find(L"<div id=\"tables\" class='tables'>");
-	if (nIndex == wstring::npos)
+	if (nIndex == std::wstring::npos)
 	{
 		strJSONResult = L"{\"error\":\"No information\"}";
 		return;
@@ -1094,7 +958,7 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 	
 	//date
 	nIndex = strResponse.find(L"<span style='font-weight: bold;'>");
-	if (nIndex == wstring::npos)
+	if (nIndex == std::wstring::npos)
 	{
 		strJSONResult = L"{\"error\":\"No date1\"}";
 		return;
@@ -1122,7 +986,7 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 
 	//from
 	nIndex = strResponse.find(L"<span style='font-weight: bold;'>");
-	if (nIndex == wstring::npos)
+	if (nIndex == std::wstring::npos)
 	{
 		strJSONResult = L"{\"error\":\"No data for departure1\"}";
 		return;
@@ -1150,7 +1014,7 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 
 	//to
 	nIndex = strResponse.find(L"<span style='font-weight: bold;'>");
-	if (nIndex == wstring::npos)
+	if (nIndex == std::wstring::npos)
 	{
 		strJSONResult = L"{\"error\":\"No data for destination1\"}";
 		return;
@@ -1179,28 +1043,28 @@ void CRailTickesDlg::ParserDPRC(std::wstring& strResponse, std::wstring& strJSON
 	//Trains;
 	while(true)
 	{
-		wstring strTrainNumber;
-		wstring strTrainDeparture;
-		wstring strTrainDestination;
-		wstring strTrainDep;
-		wstring strTrainDuration;
-		wstring strTrainArrive;
+		std::wstring strTrainNumber;
+		std::wstring strTrainDeparture;
+		std::wstring strTrainDestination;
+		std::wstring strTrainDep;
+		std::wstring strTrainDuration;
+		std::wstring strTrainArrive;
 		//wstring strTrainLux;
-		wstring strTrainLuxPrice;
-		wstring strTrainLuxSeat;
-		wstring strTrainCompartmentFirmPrice;
-		wstring strTrainCompartmentFirmSeat;
-		wstring strTrainCompartmentPrice;
-		wstring strTrainCompartmentSeat;
-		wstring strTrainThirdClassFirmPrice;
-		wstring strTrainThirdClassFirmSeat;
-		wstring strTrainThirdClassPrice;
-		wstring strTrainThirdClassSeat;
-		wstring strTrainSeatsPrice;
-		wstring strTrainSeatsSeat;
+		std::wstring strTrainLuxPrice;
+		std::wstring strTrainLuxSeat;
+		std::wstring strTrainCompartmentFirmPrice;
+		std::wstring strTrainCompartmentFirmSeat;
+		std::wstring strTrainCompartmentPrice;
+		std::wstring strTrainCompartmentSeat;
+		std::wstring strTrainThirdClassFirmPrice;
+		std::wstring strTrainThirdClassFirmSeat;
+		std::wstring strTrainThirdClassPrice;
+		std::wstring strTrainThirdClassSeat;
+		std::wstring strTrainSeatsPrice;
+		std::wstring strTrainSeatsSeat;
 
 		nIndex = strResponse.find(L"<tr class=\"train_row\" id=\"row_");
-		if (nIndex == wstring::npos)
+		if (nIndex == std::wstring::npos)
 			break;
 		nIndex +=  _tcslen(L"<tr class=\"train_row\" id=\"row_");
 		strResponse = strResponse.substr(nIndex, strResponse.size() - nIndex);
@@ -1329,14 +1193,17 @@ void CRailTickesDlg::OnBnClickedRadioBooking()
 	UpdateData(true);
 	if (!m_nBooking)
 	{
-		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+		std::wstring strResponse;
+		if (!m_pCUtrainControl->sendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 		{
 			AfxMessageBox(strResponse.c_str());
 			return;
 		}
 		else
+		{
 			m_strResponseCookies = strResponse;
+			SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
+		}
 	}
 
 }
@@ -1347,40 +1214,18 @@ void CRailTickesDlg::OnBnClickedRadioDprc()
 	UpdateData(true);
 	if (!m_nBooking)
 	{
-		wstring strResponse;
-		if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+		std::wstring strResponse;
+		if (!m_pCUtrainControl->sendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 		{
 			AfxMessageBox(strResponse.c_str());
 			return;
 		}
 		else
-			m_strResponseCookies = strResponse;
-	}
-}
-
-duk_ret_t CRailTickesDlg::get_result_token (duk_context *ctx)
-{
-	if (m_pCRailTickesDlg)
-	{
-		m_pCRailTickesDlg->m_strToken = L"";
-		string  strResult = duk_require_string(ctx, 0);
-		int nIndex = strResult.find("\"gv-token\", \"");
-		if (nIndex != string::npos)
 		{
-			nIndex += strlen("\"gv-token\", \"");
-			strResult = strResult.substr(nIndex);
-			int nLen = strResult.size();
-			for (int i =0; i < nLen; i++)
-			{
-				char c = strResult.at(i);
-				if (c == '\"')
-					break;
-				m_pCRailTickesDlg->m_strToken += CString(c);
-			}
+			m_strResponseCookies = strResponse;
+			SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
 		}
 	}
-	duk_push_null(ctx);
-	return 1;
 }
 
 
@@ -1392,11 +1237,14 @@ void CRailTickesDlg::OnTimer(UINT_PTR nIDEvent)
 		UpdateData(TRUE);
 		if (!m_nBooking)
 		{
-			wstring strResponse;
-			if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+			std::wstring strResponse;
+			if (!m_pCUtrainControl->sendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
 				AfxMessageBox(strResponse.c_str());
 			else
+			{
 				m_strResponseCookies = strResponse;
+				SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
+			}
 		}
 		return;
 	}

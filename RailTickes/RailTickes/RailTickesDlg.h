@@ -7,14 +7,17 @@
 #include <vector>
 #include "afxdtctl.h"
 #include <ctime>
-#include "UtrainControl.h"
 
+
+
+//delete me
 extern "C" {
 #include "duktape\duktape.h"
 }
 
 
 struct Station;
+class CUtrainControl;
 
 // CRailTickesDlg dialog
 class CRailTickesDlg : public CDialogEx
@@ -61,9 +64,6 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	bool SendRequestForToken(const std::wstring& strURL, std::wstring& strResponse); //delete me 
-	static duk_ret_t get_result_token(duk_context *ctx);
-	static CRailTickesDlg* m_pCRailTickesDlg;
 	std::wstring CreateUTMCokies();
 	std::time_t timeFirstVisit;
 
@@ -73,10 +73,10 @@ protected:
 private:
 	std::vector<Station*> m_vecpStationsFrom;
 	std::vector<Station*> m_vecpStationsTo;
-	std::wstring  m_strToken;
+	std::wstring  m_strToken; //delete me
 	std::wstring m_strResponseCookies;
 	int m_nVisitBooking;
-	CUtrainControl m_CUtrainControl;
+	CUtrainControl* m_pCUtrainControl;
 
 
 public:
