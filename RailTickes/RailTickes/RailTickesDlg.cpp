@@ -28,12 +28,6 @@ const wchar_t* g_strAlphabet[] =
 	L"Р", L"С", L"Т", L"У", L"Ф", L"Х", L"Ц", L"Щ", L"Ш ", L"Э", L"Ю", L"Я", NULL 
 };
 
-struct Station
-{
-	std::wstring m_strID;
-	std::wstring m_strName;
-};
-
 
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
@@ -261,119 +255,124 @@ std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
 	return strResponse;
 }
 
-//delete me
+
 bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
-	//CString strError;
 
-	//comboStation.ResetContent();
-	//CleanStations(&vecpStations);
+	comboStation.ResetContent();
+	CleanStations(&vecpStations);
 
-	//std::wstring strURL(L"http://booking.uz.gov.ua/ru/purchase/station/");
-	//CString strA;
-	//comboA.GetLBText(comboA.GetCurSel(), strA);
-	//strURL.append(strA);
-	//WinHttpClient request(strURL);
+	std::wstring strURL(L"http://booking.uz.gov.ua/ru/purchase/station/");
+	CString strA;
+	comboA.GetLBText(comboA.GetCurSel(), strA);
+	strURL.append(strA);
+	
+	if (!m_pCUtrainControl->fillStations(strURL, vecpStations))
+	{
+		AfxMessageBox(m_pCUtrainControl->m_strError.c_str());
+		return false;		
+	}
 
-	//// Set request headers.
-	//wstring strHeaders = L"Content-Length: ";
-	//strHeaders += L"0";
-	//strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	//request.SetAdditionalRequestHeaders(strHeaders);
 
-	//// Send http post request.
-	//if ( !request.SendHttpRequest(L"Get"))
-	//{
-	//	strError.Format(L"Error sending: %i", request.GetLastError());
-	//	AfxMessageBox(strError);
-	//	return false;
-	//}
+	// Set request headers.
+	wstring strHeaders = L"Content-Length: ";
+	strHeaders += L"0";
+	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	request.SetAdditionalRequestHeaders(strHeaders);
 
-	//wstring str_httpResponseCode = request.GetResponseStatusCode();
-	//wstring str_httpResponseContent = request.GetResponseContent();
+	// Send http post request.
+	if ( !request.SendHttpRequest(L"Get"))
+	{
+		strError.Format(L"Error sending: %i", request.GetLastError());
+		AfxMessageBox(strError);
+		return false;
+	}
 
-	//if (str_httpResponseCode.compare(L"200"))
-	//{
-	//	strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-	//	AfxMessageBox(strError);
-	//	return false;
-	//}
-	//if (str_httpResponseContent.empty())
-	//{
-	//	AfxMessageBox(L"No response");
-	//	return false;
-	//}
+	wstring str_httpResponseCode = request.GetResponseStatusCode();
+	wstring str_httpResponseContent = request.GetResponseContent();
 
-	//int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
-	//if (nIndex == wstring::npos)
-	//{
-	//	AfxMessageBox(L"Bad format");
-	//	return false;
-	//}
-	//nIndex +=  _tcslen(L"{\"value\":[{");
-	//str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-	//while(true)
-	//{
-	//	nIndex = str_httpResponseContent.find(L"\"title\":\"");
-	//	if (nIndex == wstring::npos)
-	//		break;
-	//	nIndex +=  _tcslen(L"\"title\":\"");
-	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-	//	if (str_httpResponseContent.empty())
-	//		break;
-	//	//station
-	//	wstring strName(L"");
-	//	int i, nLen;
-	//	nLen = str_httpResponseContent.size();
-	//	for (i = 0; i < nLen; i++)
-	//	{
-	//		wchar_t c = str_httpResponseContent[i];
-	//		if (c == L'\"')
-	//			break;
-	//		strName += c;
-	//	}
+	if (str_httpResponseCode.compare(L"200"))
+	{
+		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+		AfxMessageBox(strError);
+		return false;
+	}
+	if (str_httpResponseContent.empty())
+	{
+		AfxMessageBox(L"No response");
+		return false;
+	}
 
-	//	//id
-	//	nIndex = str_httpResponseContent.find(L"\"station_id\":");
-	//	if (nIndex == wstring::npos)
-	//		break;
-	//	nIndex +=  _tcslen(L"\"station_id\":");
-	//	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-	//	if (str_httpResponseContent.empty())
-	//		break;
-	//	nLen = str_httpResponseContent.size();
-	//	wstring strID(L"");
-	//	for (i = 0; i < nLen; i++)
-	//	{
-	//		wchar_t c = str_httpResponseContent[i];
-	//		if (c == L'}')
-	//			break;
-	//		strID += c;
-	//	}
-	//	int nId = std::stoi(strID);
-	//	if (nId < 2200000 || nId > 2299999)
-	//		continue; //only Ukraine
+	int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
+	if (nIndex == wstring::npos)
+	{
+		AfxMessageBox(L"Bad format");
+		return false;
+	}
+	nIndex +=  _tcslen(L"{\"value\":[{");
+	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	while(true)
+	{
+		nIndex = str_httpResponseContent.find(L"\"title\":\"");
+		if (nIndex == wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"title\":\"");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		//station
+		wstring strName(L"");
+		int i, nLen;
+		nLen = str_httpResponseContent.size();
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'\"')
+				break;
+			strName += c;
+		}
 
-	//	Station* pStation = NULL; 
-	//	pStation =  new Station;
-	//	ASSERT(pStation);
-	//	pStation->m_strID = strID;
-	//	pStation->m_strName = PrintUTF16Converter(strName);
-	//	vecpStations.push_back(pStation);
-	//}
-	//if (vecpStations.empty())
-	//{
-	//	AfxMessageBox(L"No enries.");
-	//	return false;
-	//}
+		//id
+		nIndex = str_httpResponseContent.find(L"\"station_id\":");
+		if (nIndex == wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"station_id\":");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		nLen = str_httpResponseContent.size();
+		wstring strID(L"");
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'}')
+				break;
+			strID += c;
+		}
+		int nId = std::stoi(strID);
+		if (nId < 2200000 || nId > 2299999)
+			continue; //only Ukraine
 
-	//int nSize = vecpStations.size();
-	//for (int j = 0; j < nSize; j++)
-	//{
-	//	Station* pStation = vecpStations[j];
-	//	comboStation.AddString(pStation->m_strName.c_str());
-	//}
-	//comboStation.SetCurSel(0);
+		Station* pStation = NULL; 
+		pStation =  new Station;
+		ASSERT(pStation);
+		pStation->m_strID = strID;
+		pStation->m_strName = PrintUTF16Converter(strName);
+		vecpStations.push_back(pStation);
+	}
+	if (vecpStations.empty())
+	{
+		AfxMessageBox(L"No enries.");
+		return false;
+	}
+
+	int nSize = vecpStations.size();
+	for (int j = 0; j < nSize; j++)
+	{
+		Station* pStation = vecpStations[j];
+		comboStation.AddString(pStation->m_strName.c_str());
+	}
+	comboStation.SetCurSel(0);
 	return true;
 }
 

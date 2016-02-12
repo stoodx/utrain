@@ -1,10 +1,19 @@
 #pragma once
 #include <ctime>
 #include <string>
+#include <vector>
 
 extern "C" {
 #include "duktape\duktape.h"
 }
+
+
+struct Station
+{
+	std::wstring m_strID;
+	std::wstring m_strName;
+};
+
 
 class HttpClient
 {
@@ -45,14 +54,25 @@ public:
 	//strURL: url access
 	//return: 
 	// - NULL, if it's fail 
-	// - HttpClient object, if it's true
+	// - HttpClient object, if it's true. Delete the object by finish
 	virtual HttpClient* createHttpClient(const std::wstring& strURL) = 0;
 
 	//result of  js run
 	static duk_ret_t get_result_token(duk_context *ctx);
 	
-	//class object for get_result_token()
+	//object for get_result_token()
 	static CBaseUtrainModel* m_pCBaseUtrainModel;
+
+	//Get  station names and its ID, 
+	//then write them to  the array 
+	//strURL: url
+	//vecpStations: Station array
+	//return: true -ok, fail - error (see m_strError for details)
+	bool fillStations(const std::wstring strURL,  std::vector<Station*>& vecpStations);
+
+	//Describe the last error
+	std::wstring m_strError;
+
 
 private:
 	//start time 

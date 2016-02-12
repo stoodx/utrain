@@ -6,14 +6,8 @@
 #include "afxwin.h"
 #include <vector>
 #include "afxdtctl.h"
-#include <ctime>
+#include <ctime> //delete me
 
-
-
-//delete me
-extern "C" {
-#include "duktape\duktape.h"
-}
 
 
 struct Station;

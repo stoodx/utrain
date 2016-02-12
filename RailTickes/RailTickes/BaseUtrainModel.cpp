@@ -10,6 +10,7 @@ CBaseUtrainModel* CBaseUtrainModel::m_pCBaseUtrainModel = NULL;
 
 CBaseUtrainModel::CBaseUtrainModel(void)
 	: m_strToken(L"")
+	, m_strError(L"")
 {
 	m_timeFirstVisit = time(nullptr);
 	m_pCBaseUtrainModel = (CBaseUtrainModel*)this;
@@ -23,10 +24,12 @@ CBaseUtrainModel::~CBaseUtrainModel(void)
 
 bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstring& strResponse)
 {
+	m_strError = L"";
 	HttpClient*  pHttpClient = createHttpClient(strURL);
 	if (!pHttpClient)
 	{
 		strResponse = L"No HttpClient object";
+		m_strError = strResponse;
 		return false;
 	}
 	strResponse = L"";
@@ -41,22 +44,27 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	{
 		strResponse = L"Error sending: ";
 		strResponse.append(std::to_wstring(pHttpClient->GetLastError()));
+		delete pHttpClient;
+		m_strError = strResponse;
 		return false;
 	}
 
 	std::wstring str_httpResponseCode = pHttpClient->GetResponseStatusCode();
 	std::wstring str_httpResponseContent = pHttpClient->GetResponseContent();
 	std::wstring str_httpResponseCookies = pHttpClient->GetResponseCookies();
+	delete pHttpClient;
 
 	if (str_httpResponseCode.compare(L"200"))
 	{
 		strResponse = L"Error sending: ";
 		strResponse.append(str_httpResponseCode);
+		m_strError = strResponse;
 		return false;
 	}
 	if (str_httpResponseContent.empty())
 	{
 		strResponse =  L"No response";
+		m_strError = strResponse;
 		return false;
 	}
 
@@ -65,6 +73,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if (nIndex == std::wstring::npos)
 	{
 		strResponse = L"Token: bad format";
+		m_strError = strResponse;
 		return false;
 	}
 	nIndex += getSize(L"gaq.push(['_trackPageview']);");
@@ -73,6 +82,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if (nIndex == std::wstring::npos)
 	{
 		strResponse = L"Token: bad format";
+		m_strError = strResponse;
 		return false;
 	}
 	str_httpResponseContent = str_httpResponseContent.substr(0, nIndex);
@@ -83,6 +93,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if(!ctx)
 	{
 		strResponse = L"HEAP_CREATION_ERROR";
+		m_strError = strResponse;
 		return false;
 	}
 	duk_push_global_object(ctx);
@@ -98,6 +109,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 			strResponse = convUTF8toUTF16(duk_safe_to_string(ctx, -1));
 			duk_pop(ctx);
 			duk_destroy_heap(ctx);
+			m_strError = strResponse;
 			return false;
 		}
 		duk_pop(ctx);
@@ -107,6 +119,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 		strResponse = convUTF8toUTF16(duk_safe_to_string(ctx, -1));
 		duk_pop(ctx);
 		duk_destroy_heap(ctx);
+		m_strError = strResponse;
 		return false;
 	}
 
@@ -123,6 +136,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if (nIndex == std::wstring::npos)
 	{
 		strResponse = L"No _gv_sessid";
+		m_strError = strResponse;
 		return false;
 	}
 	for(i = nIndex; i < nLen; i++)
@@ -138,6 +152,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if (nIndex == std::wstring::npos)
 	{
 		strResponse = L"No _gv_lang";
+		m_strError = strResponse;
 		return false;
 	}
 	for(i = nIndex; i < nLen; i++)
@@ -153,6 +168,7 @@ bool CBaseUtrainModel::sendRequestForToken(const std::wstring& strURL, std::wstr
 	if (nIndex == std::wstring::npos)
 	{
 		strResponse = L"No HTTPSERVERID";
+		m_strError = strResponse;
 		return false;
 	}
 	for(i = nIndex; i < nLen; i++)
@@ -206,8 +222,127 @@ duk_ret_t CBaseUtrainModel::get_result_token (duk_context *ctx)
 
 std::wstring CBaseUtrainModel::convUTF8toUTF16(const std::string& str)
 {
-	typedef std::codecvt_utf16<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
+	std::wstring wsTmp(str.begin(), str.end());
 
-	return converterX.from_bytes(str);
+	return wsTmp;
+}
+
+
+bool CBaseUtrainModel::fillStations(const std::wstring strURL,  std::vector<Station*>& vecpStations)
+{
+	m_strError = L"";
+	if (strURL.empty())
+	{
+		m_strError =  L"fillStations() - No URL";
+		return false;
+	}
+
+	HttpClient* pHttpClient = createHttpClient(strURL);
+	if (!pHttpClient)
+	{
+		m_strError =  L"Cannot create HttpClient";
+		return false;
+	}
+
+	// Set request headers.
+	std::wstring strHeaders = L"Content-Length: ";
+	strHeaders += L"0";
+	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
+	pHttpClient->SetAdditionalRequestHeaders(strHeaders);
+
+	// Send http post request.
+	if ( !pHttpClient->SendHttpRequest(L"Get"))
+	{
+		strError.Format(L"Error sending: %i", pHttpClient->GetLastError());
+		delete pHttpClient;
+		return false;
+	}
+
+	std::wstring str_httpResponseCode = pHttpClient->GetResponseStatusCode();
+	std::wstring str_httpResponseContent = pHttpClient->GetResponseContent();
+	delete pHttpClient;
+
+	if (str_httpResponseCode.compare(L"200"))
+	{
+		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
+		return false;
+	}
+	if (str_httpResponseContent.empty())
+	{
+		AfxMessageBox(L"No response");
+		return false;
+	}
+
+	int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
+	if (nIndex == std::wstring::npos)
+	{
+		AfxMessageBox(L"Bad format");
+		return false;
+	}
+	nIndex +=  _tcslen(L"{\"value\":[{");
+	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+	while(true)
+	{
+		nIndex = str_httpResponseContent.find(L"\"title\":\"");
+		if (nIndex == std::wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"title\":\"");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		//station
+		std::wstring strName(L"");
+		int i, nLen;
+		nLen = str_httpResponseContent.size();
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'\"')
+				break;
+			strName += c;
+		}
+
+		//id
+		nIndex = str_httpResponseContent.find(L"\"station_id\":");
+		if (nIndex == std::wstring::npos)
+			break;
+		nIndex +=  _tcslen(L"\"station_id\":");
+		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
+		if (str_httpResponseContent.empty())
+			break;
+		nLen = str_httpResponseContent.size();
+		std::wstring strID(L"");
+		for (i = 0; i < nLen; i++)
+		{
+			wchar_t c = str_httpResponseContent[i];
+			if (c == L'}')
+				break;
+			strID += c;
+		}
+		int nId = std::stoi(strID);
+		if (nId < 2200000 || nId > 2299999)
+			continue; //only Ukraine
+
+		Station* pStation = NULL; 
+		pStation =  new Station;
+		ASSERT(pStation);
+		pStation->m_strID = strID;
+		pStation->m_strName = PrintUTF16Converter(strName);
+		vecpStations.push_back(pStation);
+	}
+	if (vecpStations.empty())
+	{
+		AfxMessageBox(L"No enries.");
+		return false;
+	}
+
+	int nSize = vecpStations.size();
+	for (int j = 0; j < nSize; j++)
+	{
+		Station* pStation = vecpStations[j];
+		comboStation.AddString(pStation->m_strName.c_str());
+	}
+	comboStation.SetCurSel(0);
+	return true;
+
 }
