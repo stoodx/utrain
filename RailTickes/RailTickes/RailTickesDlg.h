@@ -52,8 +52,7 @@ private:
 	void ParserDPRC(std::wstring& strResponse, std::wstring& strJSONResult);
 	bool PartParser(std::wstring& strResponse, const wchar_t* str, std::wstring& strTarget);
 	bool PartParserWagon(std::wstring& strResponse, const wchar_t* str, std::wstring& strPrice, std::wstring& strSeats);
-	std::wstring PrintUTF16Converter(std::wstring& str);
-	std::string UTF16toUTF8(const std::wstring strUTF16);
+	std::string UTF16toUTF8(const std::wstring strUTF16); 
 	std::string UrlEncode(const std::string str);
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();

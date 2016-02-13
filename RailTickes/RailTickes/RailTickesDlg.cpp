@@ -159,103 +159,6 @@ bool CRailTickesDlg::FillStations(CComboBox& comboA, CComboBox& comboStation, st
 		return FillStationsDPRC(comboA, comboStation, vecpStations);
 }
 
-std::wstring CRailTickesDlg::PrintUTF16Converter(std::wstring& str)
-{
-	std::wstring strResponse = L"";
-	if (str.empty())
-		return strResponse;
-
-	typedef enum {
-		_empty = 0,
-		_start,
-		_0,
-		_1,
-		_2, 
-		_3
-	} _status;
-	_status status = _empty;
-	wchar_t ch;
-	int nLen = str.size();
-	std::wstring strConvert;
-	wchar_t chNumber[] = {L'0',L'1',L'2',L'3',L'4',L'5',L'6',L'7',L'8',L'9', L'a', L'b', L'c', L'd', L'e', L'f'};
-	unsigned char nNumber[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf};
-
-	for(int i = 0; i < nLen; i++)
-	{
-		ch = str.at(i);
-		switch (status)
-		{
-		case _empty:
-			if (ch == L'\\')
-			{
-				status = _start;
-			}
-			else
-				strResponse += ch;
-			break;
-		case _start:
-			if (ch != L'u')
-			{
-				status = _empty;
-				strResponse += L'\\';
-				strResponse += ch;
-			}
-			else
-				status = _0;
-			break;
-		case _0:
-			strConvert = ch;
-			status = _1;
-			break;
-		case _1:
-			strConvert += ch;
-			status = _2;
-			break;
-		case _2:
-			strConvert += ch;
-			status = _3;
-			break;
-		case _3:
-			{
-				strConvert += ch;
-				status = _empty;
-				unsigned char strBuf[5] = {0};
-				wchar_t chs[4];
-				unsigned char n[4];
-				chs[0]  = strConvert.at(0);
-				chs[1]  = strConvert.at(1);
-				chs[2]  = strConvert.at(2);
-				chs[3]  = strConvert.at(3);
-				int j;
-				for (j = 0; j < 4; j++)
-				{
-					int m = 0;
-					while ( m < 16)
-					{
-						if (chs[j] == chNumber[m])
-							break;
-						m++;
-					}
-					n[j] = nNumber[m];
-				}
-				n[2] = n[2] << 4; 
-				strBuf[0] |= n[2];
-				strBuf[0] |= n[3];
-				n[0] = n[0] << 4;
-				strBuf[1] |= n[0];
-				strBuf[1] |= n[1];
-				strResponse += (wchar_t*)strBuf;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-
-	return strResponse;
-}
-
-
 bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations)
 {
 
@@ -271,99 +174,6 @@ bool CRailTickesDlg::FillStationsBooking(CComboBox& comboA, CComboBox& comboStat
 	{
 		AfxMessageBox(m_pCUtrainControl->m_strError.c_str());
 		return false;		
-	}
-
-
-	// Set request headers.
-	wstring strHeaders = L"Content-Length: ";
-	strHeaders += L"0";
-	strHeaders += L"\r\nContent-Type: binary/octet-stream\r\n";
-	request.SetAdditionalRequestHeaders(strHeaders);
-
-	// Send http post request.
-	if ( !request.SendHttpRequest(L"Get"))
-	{
-		strError.Format(L"Error sending: %i", request.GetLastError());
-		AfxMessageBox(strError);
-		return false;
-	}
-
-	wstring str_httpResponseCode = request.GetResponseStatusCode();
-	wstring str_httpResponseContent = request.GetResponseContent();
-
-	if (str_httpResponseCode.compare(L"200"))
-	{
-		strError.Format(L"Error response: %s", str_httpResponseCode.c_str());
-		AfxMessageBox(strError);
-		return false;
-	}
-	if (str_httpResponseContent.empty())
-	{
-		AfxMessageBox(L"No response");
-		return false;
-	}
-
-	int nIndex = str_httpResponseContent.find(L"{\"value\":[{");
-	if (nIndex == wstring::npos)
-	{
-		AfxMessageBox(L"Bad format");
-		return false;
-	}
-	nIndex +=  _tcslen(L"{\"value\":[{");
-	str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-	while(true)
-	{
-		nIndex = str_httpResponseContent.find(L"\"title\":\"");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"\"title\":\"");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		//station
-		wstring strName(L"");
-		int i, nLen;
-		nLen = str_httpResponseContent.size();
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'\"')
-				break;
-			strName += c;
-		}
-
-		//id
-		nIndex = str_httpResponseContent.find(L"\"station_id\":");
-		if (nIndex == wstring::npos)
-			break;
-		nIndex +=  _tcslen(L"\"station_id\":");
-		str_httpResponseContent = str_httpResponseContent.substr(nIndex, str_httpResponseContent.size() - nIndex);
-		if (str_httpResponseContent.empty())
-			break;
-		nLen = str_httpResponseContent.size();
-		wstring strID(L"");
-		for (i = 0; i < nLen; i++)
-		{
-			wchar_t c = str_httpResponseContent[i];
-			if (c == L'}')
-				break;
-			strID += c;
-		}
-		int nId = std::stoi(strID);
-		if (nId < 2200000 || nId > 2299999)
-			continue; //only Ukraine
-
-		Station* pStation = NULL; 
-		pStation =  new Station;
-		ASSERT(pStation);
-		pStation->m_strID = strID;
-		pStation->m_strName = PrintUTF16Converter(strName);
-		vecpStations.push_back(pStation);
-	}
-	if (vecpStations.empty())
-	{
-		AfxMessageBox(L"No enries.");
-		return false;
 	}
 
 	int nSize = vecpStations.size();
@@ -655,21 +465,23 @@ std::wstring CRailTickesDlg::CreateUTMCokies()
 	return strCookies;
 }
 
-//delete me
+
 std::wstring CRailTickesDlg::RequestBookong()
 {
-	return NULL;
-	//if (m_strToken.empty())
-	//{
-	//	std::wstring strResponse;
-	//	if (!SendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
-	//	{
-	//		return CString(strResponse.c_str()).GetBuffer();
-	//	}
-	//	else
-	//		m_strResponseCookies = strResponse;
-	//	return L"Try to send a request once again";
-	//}
+	if (m_pCUtrainControl->checkToken == false)
+	{
+		std::wstring strResponse;
+		if (!m_pCUtrainControl->sendRequestForToken(L"http://booking.uz.gov.ua/ru/", strResponse))
+		{
+			return CString(strResponse.c_str()).GetBuffer();
+		}
+		else
+		{
+			m_strResponseCookies = strResponse;
+			SetTimer(timerRefreshSession, TIMER_REFRESH_SESSION, NULL);
+		}
+		return L"Try to send a request once again";
+	}
 
 	//int nCurrentPosForm = m_comboFrom.GetCurSel();
 	//int nCurrentPosTo = m_comboTo.GetCurSel();

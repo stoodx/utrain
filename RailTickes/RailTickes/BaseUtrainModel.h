@@ -73,6 +73,14 @@ public:
 	//Describe the last error
 	std::wstring m_strError;
 
+	//send HTTP request to Booking site
+	//return: 
+	//	true - a server json response in strResponse 
+	//	fail -  error, details in strResponse and m_strError
+	bool sendRequest(const std::wstring& strURL,  std::wstring& strResponse);
+
+	bool checkToken(); 
+
 
 private:
 	//start time 
@@ -86,6 +94,9 @@ private:
 
 	//convertation to UTF-16
 	std::wstring convUTF8toUTF16(const std::string& str);
+
+	//convertation the print UTF-16 code ("\u0421\u0442....") to UTF-16 string
+	std::wstring convPrintUTF16(std::wstring& str);
 
 };
 
