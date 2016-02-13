@@ -27,6 +27,7 @@ public:
 	virtual int GetLastError(void) = 0;
 	virtual std::wstring GetResponseContent(void) = 0;
 	virtual std::wstring GetResponseCookies(void) = 0;
+	virtual bool SetAdditionalDataToSend(unsigned char *data, unsigned int dataSize) = 0;
 };
 
 class CBaseUtrainModel
@@ -41,7 +42,7 @@ public:
 	//	_gv_lang,
 	//	HTTPSERVERID
 	//strURL: start URL, for example, http://booking.uz.gov.ua 
-	//strResponse:  _gv_sessid, _gv_lang, HTTPSERVERID or error
+	//strResponse:  _gv_sessid, _gv_lang, HTTPSERVERID or error. These cookies are saved to m_strResponseCookies
 	//return: true - OK (run js decoder), fail - error 
 	bool sendRequestForToken(const std::wstring& strURL, std::wstring& strResponse);
 
@@ -67,7 +68,7 @@ public:
 	//then write them to  the array 
 	//strURL: url
 	//vecpStations: Station array
-	//return: true -ok, fail - error (see m_strError for details)
+	//return: true -ok, false - error (see m_strError for details)
 	bool fillStations(const std::wstring strURL,  std::vector<Station*>& vecpStations);
 
 	//Describe the last error
@@ -76,8 +77,8 @@ public:
 	//send HTTP request to Booking site
 	//return: 
 	//	true - a server json response in strResponse 
-	//	fail -  error, details in strResponse and m_strError
-	bool sendRequest(const std::wstring& strURL,  std::wstring& strResponse);
+	//	false -  error, details in strResponse and m_strError
+	bool sendRequest(const std::wstring& strURL, const std::string& strPost, const std::wstring strReferURL, std::wstring& strResponse);
 
 	bool checkToken(); 
 
@@ -98,5 +99,13 @@ private:
 	//convertation the print UTF-16 code ("\u0421\u0442....") to UTF-16 string
 	std::wstring convPrintUTF16(std::wstring& str);
 
+	//cookies getting by sendRequestForToken()
+	std::wstring  m_strResponseCookies;
+
+	//create google cookies
+	std::wstring createUTMCokies();
+
+	//visits number to site
+	int m_nVisitBooking;
 };
 

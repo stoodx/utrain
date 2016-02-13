@@ -49,6 +49,10 @@ std::wstring CUtrainHttpClient::GetResponseCookies(void)
 	return m_pWinHttpClient->GetResponseCookies();
 }
 
+bool CUtrainHttpClient::SetAdditionalDataToSend(BYTE *data, unsigned int dataSize)
+{
+	return m_pWinHttpClient->SetAdditionalDataToSend(data, dataSize);
+}
 
 
 //////////////////////////////

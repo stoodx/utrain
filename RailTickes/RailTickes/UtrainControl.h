@@ -16,6 +16,7 @@ public:
 	int GetLastError(void);
 	std::wstring GetResponseContent(void);
 	std::wstring GetResponseCookies(void);
+	bool SetAdditionalDataToSend(BYTE *data, unsigned int dataSize);
 
 private:
 	WinHttpClient* m_pWinHttpClient;

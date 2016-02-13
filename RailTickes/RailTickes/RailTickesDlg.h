@@ -48,7 +48,6 @@ private:
 	bool FillStationsDPRC(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations);
 	bool FillStationsBooking(CComboBox& comboA, CComboBox& comboStation, std::vector<Station*>& vecpStations);
 	void CleanStations(std::vector<Station*>* pvecpStations);
-	void ParserBooking(std::wstring& strResponse, std::wstring& strJSONResult);
 	void ParserDPRC(std::wstring& strResponse, std::wstring& strJSONResult);
 	bool PartParser(std::wstring& strResponse, const wchar_t* str, std::wstring& strTarget);
 	bool PartParserWagon(std::wstring& strResponse, const wchar_t* str, std::wstring& strPrice, std::wstring& strSeats);
@@ -57,7 +56,6 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	std::wstring CreateUTMCokies();
 	std::time_t timeFirstVisit;
 
 protected:
@@ -67,8 +65,6 @@ private:
 	std::vector<Station*> m_vecpStationsFrom;
 	std::vector<Station*> m_vecpStationsTo;
 	std::wstring  m_strToken; //delete me
-	std::wstring m_strResponseCookies;
-	int m_nVisitBooking;
 	CUtrainControl* m_pCUtrainControl;
 
 
