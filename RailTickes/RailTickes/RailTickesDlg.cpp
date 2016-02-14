@@ -32,11 +32,9 @@ const wchar_t* g_strAlphabet[] =
 CRailTickesDlg::CRailTickesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CRailTickesDlg::IDD, pParent)
 	, m_nBooking(0)
-	, m_strToken(L"")
 	, m_pCUtrainControl(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	timeFirstVisit = time(nullptr); //delete me
 
 	m_pCUtrainControl = new CUtrainControl();
 	ASSERT(m_pCUtrainControl);

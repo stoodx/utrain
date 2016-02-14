@@ -6,8 +6,6 @@
 #include "afxwin.h"
 #include <vector>
 #include "afxdtctl.h"
-#include <ctime> //delete me
-
 
 
 struct Station;
@@ -56,7 +54,6 @@ private:
 	std::string Char2hex(char c);
 	std::wstring RequestBookong();
 	std::wstring RequestDPRC();
-	std::time_t timeFirstVisit;
 
 protected:
 	CComboBox m_comboFrom;
@@ -64,7 +61,6 @@ protected:
 private:
 	std::vector<Station*> m_vecpStationsFrom;
 	std::vector<Station*> m_vecpStationsTo;
-	std::wstring  m_strToken; //delete me
 	CUtrainControl* m_pCUtrainControl;
 
 
